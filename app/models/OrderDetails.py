@@ -10,6 +10,7 @@ class OrderDetails(Base):
     product_id = Column(Integer, ForeignKey("tb_product.product_id"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     discount_percent = Column(Float, default = 0)
+    final_price = Column(Float, default = 0)
     
     # Set relationship
     order = relationship('Order', back_populates='order_details')

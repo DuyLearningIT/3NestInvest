@@ -43,10 +43,22 @@ def create_category(db: Session, request : CreateCategory):
 
 def get_categories(db: Session):
 	try:
+		cates = db.query(Category).all()
+		categories = []
+		for cate in cates:
+			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+			obj = {
+				'category_id' : cate.category_id,
+				'category_name' : cate.category_name,
+				'description' : cate.description,
+				'type_name' : type_.type_name
+			}
+			categories.append(obj)
+
 		return {
 			'mess' : 'Get all categories successfully !',
 			'status_code' : 200,
-			'data' : db.query(Category).options(load_only(Category.category_id, Category.category_name, Category.description, Category.type_id)).all()
+			'data' : categories
 		}
 	except Exception as ex:
 		return {
@@ -62,6 +74,7 @@ def get_category(db: Session, category_id : int):
 				'mess' : 'Category not found !',
 				'status_code' : 404
 			}
+		type_ = db.query(Type).filter(Type.type_id == cate.type_id)
 		return {
 			'mess' : 'Get category successfully !',
 			'status_code' : 200,
@@ -69,7 +82,8 @@ def get_category(db: Session, category_id : int):
 				'category_id' : cate.category_id,
 				'category_name' : cate.category_name,
 				'description' : cate.description,
-				'type_id' : cate.type_id
+				'type_id' : cate.type_id,
+				'type_name' : type_.type_name
 			}
 		}
 	except Exception as ex:

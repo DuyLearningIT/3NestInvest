@@ -24,7 +24,8 @@ def create_user(db: Session, user: UserCreate):
 		user_name = user.user_name, 
 		user_email = user.user_email,
 		hashed_password = hashed_pw,
-		role = user.role
+		role = user.role,
+		company_name = user.company_name
 	)
 	db.add(db_user)
 	db.commit()
@@ -32,18 +33,38 @@ def create_user(db: Session, user: UserCreate):
 	return {
 		'user_id' : db_user.user_id,
 		'user_name' : db_user.user_name,
+		'company_name' : db_user.company_name,
 		'role' : db_user.role,
 		'user_email' : db_user.user_email
 	}
 
 def login(db: Session, user: UserLogin):
-	check = db.query(User).filter(User.user_email == user.email).first()
-	if check is None:
-		return None
-	
-	if verify_password(user.password, check.hashed_password):
-		return check
-	return False
+	try:
+		check = db.query(User).filter(User.user_email == user.user_email).first()
+		if check is None:
+			return {
+				'mess' : 'User not found !',
+				'status_code' : 404
+			}
+		if not verify_password(user.password, check.hashed_password):
+			return{
+				'mess' : 'Email or password was wrong !',
+				'status_code' : 400
+			}
+		return{
+			'mess' : 'Login successfully !',
+			'status_code': 200,
+			'data' : { 
+				'role' : check.role,
+				'user_name' : check.user_name
+			},
+			'access_token' : create_access_token({'user_id' : check.user_id, 'user_email' : check.user_email, 'role' : check.role})
+		}
+	except Exception as ex:
+		return {
+			'mess' : f'Something was wrong: {ex}',
+			'status_code' : 500
+		}
 
 def update_user(db: Session, user: UserUpdate):
 	check = db.query(User).filter(User.user_id == user.user_id).first()

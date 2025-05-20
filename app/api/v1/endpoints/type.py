@@ -34,7 +34,8 @@ async def get_types(db: db_depend):
 		data = type_crud.get_types(db)
 		return {
 			'mess' : 'Get all types successfully !',
-			'data' : data
+			'data' : data,
+			'status_code' : 200
 		}
 	except Exception as ex:
 		return {

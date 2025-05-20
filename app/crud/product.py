@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session, load_only
-from app.models import Product, Category
+from sqlalchemy.orm import Session, load_only, joinedload
+from app.models import Product, Category, Type
 from app.schemas import CreateProduct, UpdateProduct
 from datetime import datetime
 
@@ -37,11 +37,11 @@ def create_product(db: Session, request : CreateProduct):
 				'sku_partnumber' : new_pro.sku_partnumber,
 				'desciption' : new_pro.description,
 				'price' : new_pro.price,
-				'category_id' : new_pro.category_id,
+				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
 				'maximum_discount' : new_pro.maximum_discount,
-				'maximum_discoutn_price' : new_pro.maximum_discount_price ,
+				'maximum_discount_price' : new_pro.maximum_discount_price ,
 				'created_at' : new_pro.created_at
-			} 
+			}
 		}
 	except Exception as ex:
 		return {
@@ -51,19 +51,29 @@ def create_product(db: Session, request : CreateProduct):
 
 def get_products(db : Session):
 	try:
+		pros = db.query(Product).all()
+		products = []
+		for pro in pros:
+			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
+			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+			obj = {
+				'product_id' : pro.product_id,
+				'product_name' : pro.product_name,
+				'sku_partnumber' : pro.sku_partnumber,
+				'desciption' : pro.description,
+				'price' : pro.price,
+				'category_name': cate.category_name,
+				'type_name' : type_.type_name,
+				'maximum_discount' : pro.maximum_discount,
+				'maximum_discount_price' : pro.maximum_discount_price ,
+				'created_at' : pro.created_at,
+				'status' : pro.status
+			}
+			products.append(obj)
 		return {
 			'mess' : 'Get all products successfully !',
 			'status_code' : 200,
-			'data' : db.query(Product).options(load_only(
-					Product.product_id, 
-					Product.product_name, 
-					Product.description,
-					Product.category_id, 
-					Product.price, 
-					Product.sku_partnumber, 
-					Product.maximum_discount,
-					Product.maximum_discount_price 
-				)).all()
+			'data' : products
 		}
 	except Exception as ex:
 		return {
@@ -73,25 +83,40 @@ def get_products(db : Session):
 
 def get_product(db: Session, product_id : int):
 	try:
-		pro = db.query(Product).options(load_only(
-					Product.product_id,
-					Product.product_name,
-					Product.description,
-					Product.category_id, 
-					Product.price, 
-					Product.sku_partnumber, 
-					Product.maximum_discount,
-					Product.maximum_discount_price
-				)).filter(Product.product_id == product_id).first()
+		pro = db.query(Product).filter(Product.product_id == product_id).first()
 		if pro is None:
 			return {
 				'mess' : 'Product not found !',
 				'status_code': 404
 			}
+		cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
+		if cate is None:
+			return {
+				'mess': 'Category not found !',
+				'status_code' : 404
+			}
+		type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+		if type_ is None:
+			return {
+				'mess' : 'Type not found !',
+				'status_code' : 404
+			}
 		return {
 			'mess' : 'Get product successfully !',
 			'status_code' : 200,
-			'data' : pro
+			'data' : {
+				'product_id' : pro.product_id,
+				'product_name' : pro.product_name,
+				'sku_partnumber' : pro.sku_partnumber,
+				'desciption' : pro.description,
+				'price' : pro.price,
+				'category_name': cate.category_name,
+				'type_name' : type_.type_name,
+				'maximum_discount' : pro.maximum_discount,
+				'maximum_discount_price' : pro.maximum_discount_price ,
+				'created_at' : pro.created_at,
+				'status' : pro.status
+			}
 		}
 	except Exception as ex:
 		return {
@@ -121,18 +146,7 @@ def update_product(db: Session, request : UpdateProduct):
 		db.commit()
 		return {
 			'mess' : 'Update product successfully !',
-			'status_code' : 200,
-			'data' : {
-				'product_id' : pro.product_id,
-				'product_name' : pro.product_name,
-				'sku_partnumber' : pro.sku_partnumber,
-				'desciption' : pro.description,
-				'price' : pro.price,
-				'category_id' : pro.category_id,
-				'maximum_discount' : pro.maximum_discount,
-				'maximum_discoutn_price' : pro.maximum_discount_price ,
-				'updated_at' : pro.updated_at
-			}
+			'status_code' : 200
 		}
 	except Exception as ex:
 		return {

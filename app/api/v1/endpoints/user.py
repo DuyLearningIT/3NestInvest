@@ -66,34 +66,8 @@ async def get_user(db: db_depend, user_id : int):
 
 @router.post('/login')
 async def login(db: db_depend, request: UserLogin):
-	try:
-		data = user_crud.login(db, request)
-		if data is None:
-			return {
-				'mess' : 'User not found !',
-				'status_code' : 404
-			}
-		elif data == False:
-			return {
-				'mess' : 'Email or password was wrong !',
-				'status_code' : 400
-			}
-		return {
-			'mess' : 'Login successfully !',
-			'status_code': 200,
-			# 'data' : data,
-			'access_token' : create_access_token({
-				'user_id' : data.user_id,
-				'user_name' : data.user_name,
-				'role' : data.role,
-				'user_email' : data.user_email
-			}) 
-		}
-	except Exception as ex:
-		return {
-			'mess' : f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+	response = user_crud.login(db, request)
+	return response
 
 @router.post('/update-user')
 async def update_user(db: db_depend, request: UserUpdate):
