@@ -7,8 +7,8 @@ class Product(Base):
 	__tablename__ = 'tb_product'
 
 	product_id = Column(Integer, primary_key=True, index=True)
-	# product_type = Column(String(50))
 	product_name = Column(String(255), unique=True, nullable=False)
+	product_role = Column(String(255), default='admin')
 	category_id = Column(Integer, ForeignKey('tb_category.category_id'), nullable=False)
 	description = Column(String(255))
 	sku_partnumber = Column(String(100))

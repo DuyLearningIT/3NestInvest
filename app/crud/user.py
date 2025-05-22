@@ -5,7 +5,7 @@ from app.utils import hash_password, create_access_token, verify_password
 from datetime import datetime
 
 def get_users(db: Session):
-	users = db.query(User).options(load_only(User.user_id, User.user_name, User.user_email, User.role)).all()
+	users = db.query(User).options(load_only(User.user_id, User.user_name, User.user_email, User.role, User.company_name, User.phone)).all()
 	return users
 
 def get_user(db: Session, user_id : int):

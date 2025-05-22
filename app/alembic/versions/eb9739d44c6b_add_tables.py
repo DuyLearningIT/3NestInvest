@@ -1,8 +1,8 @@
-"""create tables
+"""add tables
 
-Revision ID: b1f5d89fe8b9
+Revision ID: eb9739d44c6b
 Revises: 
-Create Date: 2025-05-19 15:34:00.370734
+Create Date: 2025-05-21 15:27:28.325825
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b1f5d89fe8b9'
+revision: str = 'eb9739d44c6b'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -50,6 +50,16 @@ def upgrade() -> None:
     sa.UniqueConstraint('user_email')
     )
     op.create_index(op.f('ix_tb_user_user_id'), 'tb_user', ['user_id'], unique=False)
+    op.create_table('tb_user_request',
+    sa.Column('request_id', sa.Integer(), nullable=False),
+    sa.Column('user_name', sa.String(length=255), nullable=False),
+    sa.Column('user_email', sa.String(length=255), nullable=False),
+    sa.Column('phone', sa.String(length=10), nullable=False),
+    sa.Column('company_name', sa.String(length=255), nullable=False),
+    sa.Column('status', sa.String(length=100), nullable=True),
+    sa.PrimaryKeyConstraint('request_id')
+    )
+    op.create_index(op.f('ix_tb_user_request_request_id'), 'tb_user_request', ['request_id'], unique=False)
     op.create_table('tb_category',
     sa.Column('category_id', sa.Integer(), nullable=False),
     sa.Column('category_name', sa.String(length=100), nullable=False),
@@ -73,20 +83,22 @@ def upgrade() -> None:
     sa.Column('total_budget', sa.Float(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.String(length=50), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_by', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['tb_user.user_id'], ),
     sa.PrimaryKeyConstraint('order_id')
     )
     op.create_index(op.f('ix_tb_order_order_id'), 'tb_order', ['order_id'], unique=False)
     op.create_table('tb_product',
     sa.Column('product_id', sa.Integer(), nullable=False),
-    sa.Column('product_type', sa.String(length=50), nullable=True),
     sa.Column('product_name', sa.String(length=255), nullable=False),
+    sa.Column('product_role', sa.String(length=255), nullable=True),
     sa.Column('category_id', sa.Integer(), nullable=False),
     sa.Column('description', sa.String(length=255), nullable=True),
     sa.Column('sku_partnumber', sa.String(length=100), nullable=True),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('maximum_discount', sa.Float(), nullable=True),
-    sa.Column('maximun_discount_price', sa.Float(), nullable=True),
+    sa.Column('maximum_discount_price', sa.Float(), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.String(length=50), nullable=True),
@@ -103,6 +115,7 @@ def upgrade() -> None:
     sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('discount_percent', sa.Float(), nullable=True),
+    sa.Column('final_price', sa.Float(), nullable=True),
     sa.ForeignKeyConstraint(['order_id'], ['tb_order.order_id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['tb_product.product_id'], ),
     sa.PrimaryKeyConstraint('order_details_id')
@@ -122,6 +135,8 @@ def downgrade() -> None:
     op.drop_table('tb_order')
     op.drop_index(op.f('ix_tb_category_category_id'), table_name='tb_category')
     op.drop_table('tb_category')
+    op.drop_index(op.f('ix_tb_user_request_request_id'), table_name='tb_user_request')
+    op.drop_table('tb_user_request')
     op.drop_index(op.f('ix_tb_user_user_id'), table_name='tb_user')
     op.drop_table('tb_user')
     op.drop_index(op.f('ix_tb_type_type_id'), table_name='tb_type')

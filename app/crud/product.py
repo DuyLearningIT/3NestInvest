@@ -23,7 +23,8 @@ def create_product(db: Session, request : CreateProduct):
 			sku_partnumber = request.sku_partnumber,
 			price = request.price,
 			maximum_discount = request.maximum_discount,
-			category_id = request.category_id
+			category_id = request.category_id,
+			product_role = request.product_role
 		)
 		db.add(new_pro)
 		db.commit()
@@ -37,6 +38,7 @@ def create_product(db: Session, request : CreateProduct):
 				'sku_partnumber' : new_pro.sku_partnumber,
 				'desciption' : new_pro.description,
 				'price' : new_pro.price,
+				'product_role' : new_pro.product_role,
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
 				'maximum_discount' : new_pro.maximum_discount,
 				'maximum_discount_price' : new_pro.maximum_discount_price ,
@@ -60,6 +62,7 @@ def get_products(db : Session):
 				'product_id' : pro.product_id,
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
+				'product_role' : pro.product_role,
 				'desciption' : pro.description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
@@ -108,6 +111,7 @@ def get_product(db: Session, product_id : int):
 				'product_id' : pro.product_id,
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
+				'product_role' : pro.product_role,
 				'desciption' : pro.description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
@@ -178,19 +182,27 @@ def get_products_by_category(db: Session, category_id: int):
 
 def get_products_by_type(db: Session, type_id: int):
 	try:
+		# Chỗ này xem liệu có cần không thì thêm vào 
+		# type_ = db.query(Type).filter(Type.type_id == type_id).first()
+		# if type_ is None:
+		# 	return {
+		# 		'mess' : 'Type not found !',
+		# 		'status_code': 404
+		# 	}
+		cates = db.query(Category).filter(Category.type_id == type_id).all()
+		pros = []
+		for cate in cates:
+			products = db.query(Product).filter(Product.category_id == cate.category_id).all()
+			for pro in products:
+				obj = {
+					'product' : pro,
+					'category_name': cate.category_name
+				}
+				pros.append(obj)
 		return {
-			'mess' : 'Get products by category successfully !',
+			'mess' : 'Get all products by type successfully !',
 			'status_code' : 200,
-			'data' : db.query(Product).join(Category).options(load_only(
-					Product.product_id, 
-					Product.product_name, 
-					Product.description,
-					Product.category_id, 
-					Product.price, 
-					Product.sku_partnumber, 
-					Product.maximum_discount,
-					Product.maximum_discount_price 
-				)).filter(Category.type_id == type_id).all()
+			'data' : pros
 		}
 	except Exception as ex:
 		return {
@@ -215,5 +227,70 @@ def delete_product(db: Session, product_id : int):
 	except Exception as ex:
 		return {
 			'mess': f'Something was wrong: {ex}',
+			'status_code' : 500
+		}
+
+def get_products_by_role(db: Session, role: str):
+	try:
+		pros = db.query(Product).filter(Product.product_role == role).all()
+		products = []
+		for pro in pros:
+			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
+			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+			obj = {
+				'product_id' : pro.product_id,
+				'product_name' : pro.product_name,
+				'sku_partnumber' : pro.sku_partnumber,
+				'product_role' : pro.product_role,
+				'desciption' : pro.description,
+				'price' : pro.price,
+				'category_name': cate.category_name,
+				'maximum_discount' : pro.maximum_discount,
+				'maximum_discount_price' : pro.maximum_discount_price ,
+				'created_at' : pro.created_at,
+				'status' : pro.status
+			}
+			products.append(obj)
+		return {
+			'mess' : 'Get all products successfully !',
+			'status_code' : 200,
+			'data' : products
+		}
+	except Exception as ex:
+		return {
+			'mess': f'Something was wrong: {ex}',
+			'status_code' : 500
+		}
+
+def get_products_by_role_and_type(db: Session, role: str, type_id: int):
+	try:
+		products = db.query(Product).filter(Product.product_role == role).all()
+		pros = []
+		for pro in products:
+			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
+			# Có thể sét thêm cả cate có null hay không
+			if cate.type_id == type_id:
+				obj = {
+					'product_id' : pro.product_id,
+					'product_name' : pro.product_name,
+					'sku_partnumber' : pro.sku_partnumber,
+					'product_role' : pro.product_role,
+					'description' : pro.description,
+					'price' : pro.price,
+					'category_name': cate.category_name,
+					'maximum_discount' : pro.maximum_discount,
+					'maximum_discount_price' : pro.maximum_discount_price ,
+					'created_at' : pro.created_at,
+					'status' : pro.status
+				}
+				pros.append(obj)
+		return {
+			'mess': 'Get products successflly !',
+			'status_code' : 200,
+			'data': pros
+		}
+	except Exception as ex:
+		return {
+			'mess' : f'Something was wrong {ex}',
 			'status_code' : 500
 		}
