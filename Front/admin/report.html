@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - User Request Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            height: var(--header-height);
+            border-bottom: 1px solid #eee;
+        }
+        
+        .sidebar-header img {
+            width: 35px;
+            height: 35px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 0;
+            position: relative;
+        }
+        
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #5e6278;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background-color: rgba(74, 108, 247, 0.05);
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            height: var(--header-height);
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #5e6278;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            max-width: 400px;
+            margin: 0 30px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 15px 8px 40px;
+            border: 1px solid #e1e3ea;
+            border-radius: 5px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a1a5b7;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 15px;
+            object-fit: cover;
+        }
+        
+        .user-info .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .user-info .user-role {
+            font-size: 12px;
+            color: #a1a5b7;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .page-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #181c32;
+            margin-bottom: 5px;
+        }
+        
+        .breadcrumb {
+            font-size: 14px;
+            color: #a1a5b7;
+        }
+        
+        .breadcrumb a {
+            color: #a1a5b7;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+        
+        .action-buttons .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5cca;
+        }
+        
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px 30px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 250px;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 0 15px 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+            color: #fff;
+        }
+        
+        .bg-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .bg-success {
+            background-color: var(--success-color);
+        }
+        
+        .bg-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .bg-info {
+            background-color: var(--info-color);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #181c32;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #a1a5b7;
+        }
+        
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #181c32;
+            margin: 0;
+        }
+        
+        .card-header .tools {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .card-header .tools button {
+            background: none;
+            border: none;
+            color: #a1a5b7;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-header .tools button:hover {
+            color: var(--primary-color);
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th,
+        table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            font-weight: 500;
+            color: #181c32;
+            background-color: #f9fafb;
+            font-size: 14px;
+        }
+        
+        table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .product-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* .product-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+         */
+        .product-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .product-info span {
+            font-size: 11px;
+            color: #a1a5b7;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+        
+        .badge-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: #a1a5b7;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .edit-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .delete-btn:hover {
+            color: var(--danger-color);
+        }
+        
+        .view-btn:hover {
+            color: var(--info-color);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            width: 35px;
+            height: 35px;
+            border: 1px solid #e1e3ea;
+            background-color: #fff;
+            color: #5e6278;
+            font-size: 14px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination button.active {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        
+        .pagination button:hover:not(.active) {
+            background-color: #f9fafb;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 700px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .modal-header {
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #181c32;
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #a1a5b7;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #181c32;
+            margin-bottom: 8px;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #e1e3ea;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #5e6278;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .header {
+                padding: 0 15px;
+            }
+            
+            .search-box {
+                margin: 0 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+            }
+            
+            .stat-card {
+                min-width: 100%;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                margin-top: 15px;
+            }
+            
+            .modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="../images/logo-3nestinvest.png" alt="Logo">
+            <h3>Admin Panel</h3>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="./dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="./product.html">
+                    <i class="fas fa-box"></i>
+                    <span>Product</span>
+                </a>
+            </li>
+            <li>
+                <a href="./category.html">
+                    <i class="fas fa-tags"></i>
+                    <span>Category</span>
+                </a>
+            </li>
+            <li>
+                <a href="./order.html">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Order</span>
+                </a>
+            </li>
+            <li>
+                <a href="./customer.html">
+                    <i class="fas fa-users"></i>
+                    <span>User</span>
+                </a>
+            </li>
+            <li>
+                <a href="./report.html" class="active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Report</span>
+                </a>
+            </li>
+            <li>
+                <a href="./settings.html">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li>
+                <a href="./logout.html">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <button class="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="user-info">
+                <div>
+                    <div class="user-name" id="user-name"></div>
+                    <div class="user-role"></div>
+                </div>
+                <img src="../images/user-avatar.png" alt="User">
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>User Request Management</h1>
+                    <div class="breadcrumb">
+                        <a href="./dashboard.html">Dashboard</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-value">254</div>
+                    <div class="stat-label">Pending Request</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value">180</div>
+                    <div class="stat-label">Resolved Request</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Rejected Request</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>User Requests</h2>
+                    <div class="tools">
+                        <button title="Xuất Excel">
+                            <i class="fas fa-file-excel"></i>
+                        </button>
+                        <button title="Lọc">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button title="Làm mới">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>User Email</th>
+                                    <th>Company Name</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const user_name = localStorage.getItem("user_name");
+    console.log(user_name);
+    if (user_name) {
+        const textElement = document.getElementById("user-name");
+        textElement.textContent = "Hello: " + user_name;
+    }
+    async function loadProducts() {
+  try {
+    const response = await fetch('http://localhost:8000/user-request/get-requests'); 
+    const json = await response.json();
+
+    if (json.status_code !== 200) {
+      throw new Error('Failed to load products');
+    }
+
+    const products = json.data;
+    const tbody = document.getElementById('product-table-body');
+    tbody.innerHTML = '';
+
+    products.forEach(request => {
+      const row = `
+        <tr>
+          <td>${request.user_name}</td>
+          <td>${request.user_email}</td>
+          <td>${request.company_name}</td>
+          <td>${request.phone}</td>
+          <td>${request.status}</td>
+        </tr>
+      `;
+      tbody.insertAdjacentHTML('beforeend', row);
+    });
+    } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('product-table-body').innerHTML = `<tr><td colspan="9">Cannot download data of products.</td></tr>`;
+    }
+    }
+document.addEventListener('DOMContentLoaded', loadProducts);
+</script>
+</html>

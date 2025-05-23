@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #222222;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      background-color: rgba(255,255,255,0.3);
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: black;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-button{
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: black;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #fff;
+      border-radius: 5px;
+    }
+
+    .login-btn {
+      width: 60%;
+      padding: 12px;
+      background-color: #5a67d8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      align-self: center;
+    }
+
+    .login-btn:hover {
+      background-color: black;
+    }
+
+    .forgot-password {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .forgot-password a {
+      color: #333;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-password a:hover {
+      color: #5a67d8;
+      text-decoration: underline;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .modal-content {
+      background-color: rgba(255,255,255,0.9);
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      width: 80%;
+      max-width: 500px;
+      animation: slideDown 0.4s ease;
+    }
+    
+    @keyframes slideDown {
+      from {transform: translateY(-50px); opacity: 0;}
+      to {transform: translateY(0); opacity: 1;}
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    
+    .modal-header h3 {
+      color: #333;
+      margin: 0;
+    }
+    
+    .modal-close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .modal-close:hover {
+      color: #333;
+    }
+    
+    .modal-form-group {
+      margin-bottom: 15px;
+    }
+    
+    .modal-form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: bold;
+    }
+    
+    .modal-form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
+    .modal-form-group input:focus {
+      border-color: #5a67d8;
+      outline: none;
+      box-shadow: 0 0 5px rgba(90, 103, 216, 0.5);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .submit-btn {
+      background-color: #5a67d8;
+      color: white;
+    }
+    
+    .submit-btn:hover {
+      background-color: #4c56b5;
+    }
+    
+    .cancel-btn {
+      background-color: greenyellow;
+      color: #333;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #ddd;
+    }
+    
+    .error-message {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 15px;
+      color: #888;
+      font-size: 12px;
+    }
+    
+    .success-modal {
+      display: none;
+      position: fixed;
+      z-index: 2;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .success-modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+      animation: zoomIn 0.4s ease;
+    }
+    
+    @keyframes zoomIn {
+      from {transform: scale(0.8); opacity: 0;}
+      to {transform: scale(1); opacity: 1;}
+    }
+    
+    .success-icon {
+      display: block;
+      margin: 0 auto 20px auto;
+      width: 80px;
+      height: 80px;
+      background-color: #4CAF50;
+      border-radius: 50%;
+      position: relative;
+    }
+    
+    .success-icon:after {
+      content: '';
+      position: absolute;
+      width: 40px;
+      height: 20px;
+      border-left: 8px solid white;
+      border-bottom: 8px solid white;
+      transform: rotate(-45deg);
+      top: 28px;
+      left: 20px;
+    }
+    
+    .success-message {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .success-desc {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 25px;
+    }
+    
+    .success-btn {
+      padding: 10px 25px;
+      background-color: #5a67d8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .success-btn:hover {
+      background-color: #4c56b5;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <form>
+      <div class="form-group">
+        <label for="username">Email</label>
+        <input type="text" id="username" name="username" required>
+      </div>	
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div class="form-button">
+        <button type="submit" class="login-btn">Login</button>
+        <div class="forgot-password">
+          <a href="#" id="forgot-password">Forgot password?</a>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div id="forgotPasswordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Password Reset Request</h3>
+        <span class="modal-close">&times;</span>
+      </div>
+      <form id="forgotPasswordForm">
+        <div class="modal-form-group">
+          <label for="fp-username">User name *</label>
+          <input type="text" id="fp-username" name="username" required>
+          <div class="error-message" id="username-error">Please input user name</div>
+        </div>
+        <div class="modal-form-group">
+          <label for="fp-email">Email *</label>
+          <input type="email" id="fp-email" name="email" required>
+          <div class="error-message" id="email-error">Please input email</div>
+        </div>
+        <div class="modal-form-group">
+          <label for="fp-phone">Phone number *</label>
+          <input type="tel" id="fp-phone" name="phone" required>
+          <div class="error-message" id="phone-error">Please input phone number</div>
+        </div>
+        <div class="modal-form-group">
+          <label for="fp-company">Company Name *</label>
+          <input type="text" id="fp-company" name="company" required>
+          <div class="error-message" id="company-error">Please input company name</div>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="modal-btn cancel-btn" id="cancelBtn">Cancel</button>
+          <button type="submit" class="modal-btn submit-btn">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="successModal" class="success-modal">
+    <div class="success-modal-content">
+      <div class="success-icon"></div>
+      <h3 class="success-message">Request was sent successfully! </h3>
+      <p class="success-desc">Your password reset request has been submitted. Please wait while we process it.</p>
+      <button class="success-btn" id="successCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('form').addEventListener('submit', async function (e) {
+      e.preventDefault(); 
+
+      const user_email = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const response = await fetch('http://localhost:8000/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_email, password })
+      });
+      const result = await response.json();
+      console.log(result);
+      if (response.ok && result.status_code === 200) {
+        alert("Login successfully !");
+        if (result.data && result.data.role) {
+          localStorage.setItem('access_token', result.access_token || "");
+          localStorage.setItem('role', result.data.role);
+          localStorage.setItem('user_name', result.data.user_name || "None");
+
+          if (result.data.role === 'admin') {
+            window.location.href = './admin/dashboard.html';
+          } else if (result.data.role === 'sales'){
+            window.location.href = '/sales.html'
+          }else{
+            window.location.href = '/channels.html'
+          }
+        } else {
+          alert('Something was wrong, please try again!.');
+        }
+      } else {
+        alert(result.mess || 'Login failed!');
+      }
+    });
+
+    const modal = document.getElementById('forgotPasswordModal');
+    const forgotPasswordLink = document.getElementById('forgot-password');
+    const closeBtn = document.querySelector('.modal-close');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    
+    const successModal = document.getElementById('successModal');
+    const successCloseBtn = document.getElementById('successCloseBtn');
+
+    forgotPasswordLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      modal.style.display = 'block';
+    });
+
+    closeBtn.addEventListener('click', function() {
+      modal.style.display = 'none';
+      resetForm();
+    });
+
+    cancelBtn.addEventListener('click', function() {
+      modal.style.display = 'none';
+      resetForm();
+    });
+    
+    successCloseBtn.addEventListener('click', function() {
+      successModal.style.display = 'none';
+      window.location.href = './index.html';
+    });
+
+    window.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+        resetForm();
+      }
+      if (e.target === successModal) {
+        successModal.style.display = 'none';
+        window.location.href = './index.html';
+      }
+    });
+
+    forgotPasswordForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('fp-username').value.trim();
+      const email = document.getElementById('fp-email').value.trim();
+      const phone = document.getElementById('fp-phone').value.trim();
+      const company = document.getElementById('fp-company').value.trim();
+      
+      let isValid = true;
+      
+      if (!username) {
+        showError('username-error');
+        isValid = false;
+      } else {
+        hideError('username-error');
+      }
+      
+      if (!email || !isValidEmail(email)) {
+        showError('email-error');
+        isValid = false;
+      } else {
+        hideError('email-error');
+      }
+      
+      if (!phone) {
+        showError('phone-error');
+        isValid = false;
+      } else {
+        hideError('phone-error');
+      }
+      
+      if (!company) {
+        showError('company-error');
+        isValid = false;
+      } else {
+        hideError('company-error');
+      }
+    });
+
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+
+    function showError(id) {
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function hideError(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function resetForm() {
+      forgotPasswordForm.reset();
+      const errors = document.querySelectorAll('.error-message');
+      errors.forEach(error => {
+        error.style.display = 'none';
+      });
+    }
+    
+    function showSuccessModal() {
+      successModal.style.display = 'block';
+    }
+    
+    document.addEventListener("DOMContentLoaded", function () {
+		const form = document.getElementById("forgotPasswordForm");
+
+		form.addEventListener("submit", function (event) {
+			event.preventDefault();
+
+			const user_name = document.getElementById("fp-username").value;
+			const email =  document.getElementById("fp-email").value;
+			const company = document.getElementById('fp-company').value;
+            const phone = document.getElementById('fp-phone').value;
+
+			const data = {
+				user_name : user_name,
+				user_email : email,
+				phone : phone,
+                company_name: company
+			};
+            console.log(data);
+			fetch("http://localhost:8000/user-request/create-request", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(data)
+			})
+			.then(response => response.json())
+			.then(result => { 
+        console.log(result);
+				if (result.status_code === 201){
+					modal.style.display = 'none'; 
+					showSuccessModal(); 
+				}else{
+					alert(result.mess);
+				}
+			})
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Something was wrong, please try again !.");
+            });
+		});
+	})
+  </script>
+</body>
+</html>
