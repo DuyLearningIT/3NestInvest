@@ -106,3 +106,22 @@ def delete_user (db: Session, user_id: int):
 	db.delete(check)
 	db.commit()
 	return True
+
+def get_my_info(db: Session, current_user: dict):
+	try:
+		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
+		if user is None:
+			return {
+				'mess' : 'User not found !',
+				'satus_code' : 404
+			}
+		return{
+			'mess' : 'Get user successfully !',
+			'status_code' : 200,
+			'data' : user
+		}
+	except Exception as ex:
+		return {
+			'mess' : f'Something was wrong: {ex}',
+			'status_code' : 500
+		}

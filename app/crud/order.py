@@ -60,7 +60,8 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 
 def get_orders(db: Session):
 	try:
-		orders = db.query(Order).filter(Order.status != 'draft').all()
+		# Đang lấy tất cả, lúc nào chạy bên admin thì chỉ lấy khác draft đi
+		orders = db.query(Order).all()
 		ods = []
 		for order in orders:
 			user = db.query(User).filter(User.user_id == order.user_id).first()

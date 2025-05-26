@@ -31,3 +31,8 @@ async def update_category(db : db_depend, request: UpdateCategory):
 async def delete_category(db: db_depend, category_id : int):
 	response = category_crud.delete_category(db, category_id)
 	return response
+
+@router.get('/get-categories-by-type')
+async def get_categories_by_type(db: db_depend, type_id : int):
+	response = category_crud.get_categories_by_type(db, type_id)
+	return response	

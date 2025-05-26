@@ -142,3 +142,16 @@ def delete_category(db: Session, category_id):
 			'mess' : f'Something was wrong: {ex}',
 			'status_code' : 500
 		}
+ 
+def get_categories_by_type(db: Session, type_id: int):
+	try:
+		return{
+			'mess' : 'Get categories by type successfully !',
+			'status_code' : 200,
+			'data' : db.query(Category).filter(Category.type_id == type_id).all()
+		}
+	except Exception as ex:
+		return {
+			'mess' : f'Something was wrong: {ex}',
+			'status_code' : 500	
+		}

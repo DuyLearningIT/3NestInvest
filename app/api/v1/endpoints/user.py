@@ -1,8 +1,8 @@
-from fastapi import APIRouter 
+from fastapi import APIRouter, Depends
 from app.schemas import UserCreate, UserLogin, UserUpdate, UserChangePassword
 from app.db import db_depend
 from app.crud import user as user_crud
-from app.utils import create_access_token
+from app.utils import create_access_token, get_current_user
 
 router = APIRouter(
 	prefix = '/users',
@@ -131,3 +131,8 @@ async def delete_user(db: db_depend, user_id : int):
 			'mess' : f'Something was wrong: {ex}',
 			'status_code' : 500
 		}
+	
+@router.get('/my-info')
+async def get_my_info(db: db_depend, current_user = Depends(get_current_user)):
+	response = user_crud.get_my_info(db, current_user)
+	return response
