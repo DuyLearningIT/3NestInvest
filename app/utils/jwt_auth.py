@@ -5,6 +5,7 @@ from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from app.schemas import TokenData
+# from app.core import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 SECRET_KEY = "093nestinvestca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88efrank"
 ALGORITHM = "HS256"
@@ -16,7 +17,7 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({'exp': expire, 'accessed_time': str(datetime.now())})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm= ALGORITHM)
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -45,6 +46,6 @@ def admin_required(current_user: dict = Depends(get_current_user)):
     if current_user.get('role') != 'admin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Admin access required'
+            detail='Admin access required !'
         )
     return current_user

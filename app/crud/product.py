@@ -3,7 +3,8 @@ from app.models import Product, Category, Type
 from app.schemas import CreateProduct, UpdateProduct
 from datetime import datetime
 
-def create_product(db: Session, request : CreateProduct):
+# Admin required
+def create_product(db: Session, request : CreateProduct, admin: dict):
 	try:
 		pro = db.query(Product).filter(Product.product_name == request.product_name).first()
 		if pro:
@@ -127,8 +128,8 @@ def get_product(db: Session, product_id : int):
 			'mess': f'Something was wrong: {ex}',
 			'status_code' : 500
 		}
-
-def update_product(db: Session, request : UpdateProduct):
+# Admin required
+def update_product(db: Session, request : UpdateProduct, admin: dict):
 	try:
 		pro = db.query(Product).filter(Product.product_id == request.product_id).first()
 		if pro is None:
@@ -182,7 +183,7 @@ def get_products_by_category(db: Session, category_id: int):
 
 def get_products_by_type(db: Session, type_id: int):
 	try:
-		# Chỗ này xem liệu có cần không thì thêm vào 
+		# Check if needed, then -> Add
 		# type_ = db.query(Type).filter(Type.type_id == type_id).first()
 		# if type_ is None:
 		# 	return {
@@ -210,7 +211,8 @@ def get_products_by_type(db: Session, type_id: int):
 			'status_code' : 500
 		}
 
-def delete_product(db: Session, product_id : int):
+# Admin required
+def delete_product(db: Session, product_id : int, admin: dict):
 	try:
 		pro = db.query(Product).filter(Product.product_id == product_id).first()
 		if pro is None:
@@ -229,8 +231,8 @@ def delete_product(db: Session, product_id : int):
 			'mess': f'Something was wrong: {ex}',
 			'status_code' : 500
 		}
-
-def get_products_by_role(db: Session, role: str):
+# Admin require
+def get_products_by_role(db: Session, role: str, admin: dict):
 	try:
 		pros = db.query(Product).filter(Product.product_role == role).all()
 		products = []
@@ -262,6 +264,7 @@ def get_products_by_role(db: Session, role: str):
 			'status_code' : 500
 		}
 
+# Admin required
 def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 	try:
 		products = db.query(Product).filter(Product.product_role == role).all()

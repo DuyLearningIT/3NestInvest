@@ -4,6 +4,7 @@ from app.schemas import OrderCreate, OrderUpdate
 from fastapi import Depends
 from datetime import datetime
 
+# User required
 def create_order(db: Session, order : OrderCreate, current_user: dict):
     try:
         user = db.query(User).filter(User.user_id == current_user['user_id']).first()
@@ -58,9 +59,10 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
             'status_code': 500
         }
 
-def get_orders(db: Session):
+# Admin required
+def get_orders(db: Session, admin: dict):
 	try:
-		# Đang lấy tất cả, lúc nào chạy bên admin thì chỉ lấy khác draft đi
+		# Here I'm getting all the orders, and about admin site, just get all orders that have status is not draft
 		orders = db.query(Order).all()
 		ods = []
 		for order in orders:
@@ -88,7 +90,8 @@ def get_orders(db: Session):
 			'status_code' : 500
 		}
 
-def get_order(db: Session, order_id : int):
+# User required
+def get_order(db: Session, order_id : int, current_user: dict):
 	try:
 		order = db.query(Order).filter(Order.order_id == order_id).first()
 		if order is None:
@@ -166,6 +169,30 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 				'mess' : 'Order was submitted, you cannot edit !',
 				'status_code' : 400
 			}
+	except Exception as ex:
+		return {
+			'mess': f'Something was wrong: {ex}',
+			'status_code' : 500
+		}
+
+# Admin required: This allows admin for approving or rejecting order which is submitted
+def change_status_of_order(db: Session, admin: dict, status: str, order_id : int):
+	try:
+		order = db.query(Order).filter(Order.order_id == order_id).first()
+		if order is None:
+			return {
+				'mess' : 'Order not found !',
+				'status_code' : 400
+			}
+		order.status = status or order.status
+		db.commit()
+		db.refresh(order)
+		return {
+			'mess' : 'Change status of order successfully !',
+			'status_code' : 200,
+			'data' : order
+		}
+
 	except Exception as ex:
 		return {
 			'mess': f'Something was wrong: {ex}',

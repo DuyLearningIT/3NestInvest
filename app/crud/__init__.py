@@ -4,4 +4,4 @@ from .type import create_type, get_types, get_type, update_type, delete_type
 from .product import create_product, update_product, delete_product, get_product, get_products 
 from .product import get_products_by_category, get_products_by_type, get_products_by_role, get_products_by_role_and_type
 from .request import create_request, update_request, get_request, get_requests, delete_request
-from .order import create_order, get_order_by_user, get_orders, get_order
+from .order import create_order, get_order_by_user, get_orders, get_order, update_order, change_status_of_order

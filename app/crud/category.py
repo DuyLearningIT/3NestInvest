@@ -3,7 +3,8 @@ from app.schemas import CreateCategory, UpdateCategory
 from app.models import Category, Type
 from datetime import datetime
 
-def create_category(db: Session, request : CreateCategory):
+# Admin required
+def create_category(db: Session, request : CreateCategory, admin: dict):
 	try:
 		check = db.query(Category).filter(Category.category_name == request.category_name).first()
 		if check:
@@ -92,7 +93,8 @@ def get_category(db: Session, category_id : int):
 			'status_code' : 500
 		}
 
-def update_category(db: Session, request: UpdateCategory):
+# Admin required
+def update_category(db: Session, request: UpdateCategory, admin: dict):
 	try:
 		cate = db.query(Category).filter(Category.category_id == request.category_id).first()
 		if cate is None:
@@ -123,7 +125,8 @@ def update_category(db: Session, request: UpdateCategory):
 			'status_code' : 500
 		}
 
-def delete_category(db: Session, category_id):
+# Admin required
+def delete_category(db: Session, category_id: int, admin: dict):
 	try:
 		cate = db.query(Category).filter(Category.category_id == category_id).first()
 		if cate is None:

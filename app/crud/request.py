@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from app.models import UserRequest
 from app.schemas import CreateRequest, UpdateRequest
 
-
 def create_request(db: Session, request : CreateRequest):
 	try:
 		new_request = UserRequest(
@@ -66,7 +65,8 @@ def get_request(db: Session, request_id):
 			'status_code' : 500
 		}
 
-def get_requests(db: Session):
+# Admin required
+def get_requests(db: Session, admin: dict):
 	try:
 		return {
 			'mess': 'Get all requests successfully !',
@@ -79,7 +79,8 @@ def get_requests(db: Session):
 			'status_code' : 500
 		}
 
-def delete_request(db: Session, request_id):
+# Admin required
+def delete_request(db: Session, request_id:int, admin: dict):
 	try: 
 		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
 		if request is None:
