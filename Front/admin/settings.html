@@ -623,7 +623,30 @@
         const textElement = document.getElementById("user-name");
         textElement.textContent = "Hello: " + user_name;
     }
-    
+
+    function fetchUserInfo() {
+        const accessToken = localStorage.getItem("access_token"); 
+        const url = "http://127.0.0.1:8000/users/my-info";
+
+        fetch(url, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status_code === 200) {
+                const userData = data.data;
+                document.getElementById("admin-name").value = userData.user_name || "";
+                document.getElementById("admin-email").value = userData.user_email || "";
+                document.getElementById("admin-phone").value = userData.phone || "";
+            } else {
+                console.error("Failed to fetch user info:", data.mess);
+            }
+        })
+        .catch(error => console.error("Error fetching user info:", error));
+    }
 
     function showLogoutModal() {
         const modal = document.getElementById('logoutModal');
@@ -642,7 +665,20 @@
         window.location.href = '../index.html';
     }
 
+    function saveSettings() {
+        const updatedData = {
+            name: document.getElementById("admin-name").value,
+            email: document.getElementById("admin-email").value,
+            phone: document.getElementById("admin-phone").value,
+            password: document.getElementById("admin-password").value,
+            new_password: document.getElementById("admin-new-password").value
+        };
+        console.log("Saving settings:", updatedData);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        fetchUserInfo();
+
         const logoutBtn = document.getElementById('logout');
         logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
