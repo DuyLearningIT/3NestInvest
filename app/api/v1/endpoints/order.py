@@ -36,7 +36,7 @@ async def update_order(db: db_depend, request : OrderUpdate ,current_user = Depe
 # User required
 @router.get('/get-order')
 async def get_order(db: db_depend, order_id: int, current_user = Depends(get_current_user)):
-	response = order_crud.get_order(db, order_id, current_user)
+	response = order_crud.get_order(db, order_id)
 	return response
 
 # Admin required

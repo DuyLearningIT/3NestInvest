@@ -44,7 +44,7 @@ async def update_product(db: db_depend, request: UpdateProduct, admin=Depends(ad
 # Admin required
 @router.delete('/delete-product')
 async def delete_product(db: db_depend, product_id : int, admin = Depends(admin_required)):
-	response = product_crud.delete_product(db, product_id, admin)
+	response = product_crud.delete_product(db, product_id)
 	return response
 
 # Admin required

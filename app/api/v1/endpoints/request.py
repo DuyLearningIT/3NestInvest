@@ -17,7 +17,7 @@ async def get_request(db: db_depend, request_id):
 # Admin required
 @router.get('/get-requests')
 async def get_requests(db: db_depend, admin= Depends(admin_required)):
-	response = request_crud.get_requests(db, admin)
+	response = request_crud.get_requests(db)
 	return response
 
 @router.post('/create-request')
@@ -33,5 +33,5 @@ async def update_request(db: db_depend, request: UpdateRequest):
 # Admin required
 @router.delete('/delete-request')
 async def delete_request(db: db_depend, request_id: int, admin= Depends(admin_required)):
-	response = request_crud.delete_request(db, request_id, admin)
+	response = request_crud.delete_request(db, request_id)
 	return response

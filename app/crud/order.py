@@ -3,13 +3,17 @@ from app.models import Order, OrderDetails, User, Product
 from app.schemas import OrderCreate, OrderUpdate
 from fastapi import Depends
 from datetime import datetime
+from fastapi import HTTPException, status
 
 # User required
 def create_order(db: Session, order : OrderCreate, current_user: dict):
     try:
         user = db.query(User).filter(User.user_id == current_user['user_id']).first()
         if user is None:
-            return {'mess': 'User not found!', 'status_code': 404}
+            raise HTTPException(
+				detail= 'User not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 
         db_order = Order(
             user_id=user.user_id,
@@ -27,10 +31,10 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
             product = db.query(Product).filter(Product.product_id == detail.product_id).first()
 
             if detail.discount_percent > product.maximum_discount:
-                return {
-                    'mess': 'Discount percent cannot exceed maximum!',
-                    'status_code': 400
-                }
+                raise HTTPException(
+					detail= 'Discount percent cannot exceed maximum discount percent !',
+					status_code = status.HTTP_400_BAD_REQUEST
+				)
 
             final_price = product.price * detail.quantity * (1 - (detail.discount_percent / 100))
             total_budget += final_price
@@ -49,15 +53,15 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 
         return {
             'mess': 'Create order successfully!',
-            'status_code': 201,
+            'status_code': status.HTTP_201_CREATED,
             'data': db_order
         }
 
     except Exception as ex:
-        return {
-            'mess': f'Something was wrong: {ex} !',
-            'status_code': 500
-        }
+        raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
 
 # Admin required
 def get_orders(db: Session, admin: dict):
@@ -81,40 +85,43 @@ def get_orders(db: Session, admin: dict):
 			ods.append(obj)
 		return {
 			'mess' : 'Get orders by user successfully !',
-			'status_code' : 200,
+			'status_code' : status.HTTP_200_OK,
 			'data' : ods
 		}
 	except Exception as ex:
-		return {
-			'mess' : f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+		raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
 
 # User required
-def get_order(db: Session, order_id : int, current_user: dict):
+def get_order(db: Session, order_id : int):
 	try:
 		order = db.query(Order).filter(Order.order_id == order_id).first()
 		if order is None:
-			return {
-				'mess' : 'Order not found !',
-				'status_code' : 404
-			}
+			raise HTTPException(
+				detail= 'Order not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 		return {
 			'mess' : 'Get order successfully !',
-			'status_code' : 200,
+			'status_code' : status.HTTP_200_OK,
 			'data': order
 		}
 	except Exception as ex:
-		return {
-			'mess': f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+		raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
 
 def get_order_by_user(db: Session, current_user: dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
 		if user is None:
-			return {'mess': 'User not found!', 'status_code': 404}
+			raise HTTPException(
+				detail= 'User not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 
 		orders = db.query(Order).filter(Order.user_id == user_id).all()
 		ods = []
@@ -131,27 +138,30 @@ def get_order_by_user(db: Session, current_user: dict):
 			ods.append(obj)
 		return {
 			'mess' : 'Get orders by user successfully !',
-			'status_code' : 200,
+			'status_code' : status.HTTP_200_OK,
 			'data' : ods
 		}
 	except Exception as ex:
-		return {
-			'mess': f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+		raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
 
 def update_order(db: Session, request: OrderUpdate, current_user : dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
 		if user is None:
-			return {'mess': 'User not found!', 'status_code': 404}
+			raise HTTPException(
+				detail= 'User not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 		
 		order = db.query(Order).filter(Order.order_id == request.order_id).first()
 		if order is None:
-			return {
-				'mess' : 'Order not found !',
-				'status_code' : 404
-			}
+			raise HTTPException(
+				detail= 'Order not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 		if order.status == 'draft':
 			order.order_title = request.order_title or order.order_tile
 			order.customer_name = request.customer_name or order.customer_name
@@ -162,39 +172,39 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 			db.commit()
 			return {
 				'mess' : 'Update order successfully !',
-				'status_code' : 200
+				'status_code' : status.HTTP_200_OK
 			}
 		else:
-			return{
-				'mess' : 'Order was submitted, you cannot edit !',
-				'status_code' : 400
-			}
+			raise HTTPException(
+				detail= 'Order was submitted, cannot edit !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
 	except Exception as ex:
-		return {
-			'mess': f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+		raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
 
 # Admin required: This allows admin for approving or rejecting order which is submitted
 def change_status_of_order(db: Session, admin: dict, status: str, order_id : int):
 	try:
 		order = db.query(Order).filter(Order.order_id == order_id).first()
 		if order is None:
-			return {
-				'mess' : 'Order not found !',
-				'status_code' : 400
-			}
+			raise HTTPException(
+				detail= 'Order not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 		order.status = status or order.status
 		db.commit()
 		db.refresh(order)
 		return {
 			'mess' : 'Change status of order successfully !',
-			'status_code' : 200,
+			'status_code' : satus.HTTP_200_OK,
 			'data' : order
 		}
 
 	except Exception as ex:
-		return {
-			'mess': f'Something was wrong: {ex}',
-			'status_code' : 500
-		}
+		raise HTTPException(
+			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)

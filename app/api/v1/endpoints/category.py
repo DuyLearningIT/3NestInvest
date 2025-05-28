@@ -8,6 +8,7 @@ router = APIRouter(
 	prefix = '/categories',
 	tags=['Categories']
 ) 
+
 # Admin required
 @router.post('/create-category')
 async def create_category(db: db_depend, request: CreateCategory, admin= Depends(admin_required)):
