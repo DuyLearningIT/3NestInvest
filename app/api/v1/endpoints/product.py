@@ -58,3 +58,9 @@ async def get_products_by_role(db: db_depend, current_user = Depends(get_current
 async def get_products_by_role_and_type(db: db_depend, role: str, type_id : int, admin = Depends(admin_required)):
 	response = product_crud.get_products_by_role_and_type(db, role, type_id)
 	return response
+
+# User required
+@router.get('/get-products-by-category-and-role')
+async def get_products_by_category_and_role(db : db_depend, category_id: int, current_user = Depends(get_current_user)):
+	response = product_crud.get_products_by_category_and_role(db, category_id, current_user)
+	return response

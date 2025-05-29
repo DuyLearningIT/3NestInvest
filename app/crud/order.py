@@ -21,7 +21,8 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 			created_by=user.user_name,
 			customer_name=order.customer_name, 
 			address = order.address,
-			billing_address = order.address
+			billing_address = order.address,
+			status = order.status
 		)
 		db.add(db_order)
 		db.commit()
@@ -30,11 +31,11 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 		total_budget = 0
 
 		for detail in order.details:
+			final_price = 0
 			product = db.query(Product).filter(Product.product_id == detail.product_id).first()
 
 			if current_user['role'] == 'channels':
 				final_price = product.channel_cost * detail.quantity
-				total_budget += final_price
 			else:
 				if detail.price_for_customer < product.maximum_discount_price:
 					raise HTTPException(
@@ -42,16 +43,21 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 						status_code = status.HTTP_400_BAD_REQUEST
 					)
 				final_price = detail.price_for_customer * detail.quantity
-				total_budget += final_price
+
+			# Increase the price through each year of contract duration
+			for _ in range(detail.service_contract_duration - 1):
+				final_price += 0.05 * final_price
 
 			db_detail = OrderDetails(
 				order_id=db_order.order_id,
 				product_id=detail.product_id,
 				quantity=detail.quantity,
-				price_for_customer =detail.price_for_customer, #if the role is channels -> then don't care this field
+				price_for_customer =detail.price_for_customer, # if the role is channels -> then don't care this field
 				service_contract_duration = detail.service_contract_duration,
 				final_price=final_price
-			)
+			) 
+			# Calculate all the total budget
+			total_budget += final_price
 			db.add(db_detail)
 
 		db_order.total_budget = total_budget
@@ -219,5 +225,38 @@ def change_status_of_order(db: Session, admin: dict, status: str, order_id : int
 	except Exception as ex:
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+# User required 
+def get_order_details_by_order(db: Session, order_id : int):
+	try:
+		od_details = db.query(OrderDetails).filter(OrderDetails.order_id == order_id).all()
+		order_details = []
+		for detail in od_details:
+			product = db.query(Product).filter(Product.product_id == detail.product_id).first()
+			if product is None:
+				raise HTTPException(
+					detail = 'Product not found !',
+					status_code = status.HTTP_404_NOT_FOUND
+				)
+			obj = {
+				'product_name' : product.product_name,
+				'sku_partnumber' : product.sku_partnumber,
+				'description' : product.description,
+				'price_for_customer' : detail.price_for_customer,
+				'quantity' : detail.quantity,
+				'service_contract_duration' : detail.service_contract_duration,
+				'final_price' : detail.final_price
+			}
+			order_details.append(obj)
+		return {
+			'mess' : 'Get all order details of the order successfully !',
+			'status_code' : status.HTTP_200_OK,
+			'data' : order_details
+		}
+	except Exception as ex:
+		raise HTTPException(
+			detail = f'Somethign was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)

@@ -9,6 +9,7 @@ router = APIRouter(
 	tags=['Types']
 )
 
+# Admin required
 @router.post('/create-type')
 async def create_type(db: db_depend, request: CRUDType, admin= Depends(admin_required)):
 	response = type_crud.create_type(db, request)
@@ -24,11 +25,13 @@ async def get_type(db: db_depend, type_id: int):
 	response = type_crud.get_type(db, type_id)
 	return response
 
+# Admin required
 @router.post('/update-type')
 async def update_type(db: db_depend, request : UpdateType, admin= Depends(admin_required)):
 	response = type_crud.update_type(db, request, admin)
 	return response
 
+# Admin required
 @router.delete('/delete-type')
 async def delete_type(db: db_depend, type_id: int, admin= Depends(admin_required)):
 	response = type_crud.delete_type(db, type_id)

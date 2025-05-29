@@ -96,7 +96,7 @@ def login(db: Session, user: UserLogin):
 				'role' : check.role,
 				'user_name' : check.user_name
 			},
-			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role})
+			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role, 'company_name' : check.company_name, 'phone' : check.phone})
 		}
 	except Exception as ex:
 		raise HTTPException(

@@ -10,8 +10,9 @@ class OrderDetailCreate(BaseModel):
 class OrderCreate(BaseModel):
 	order_title : str
 	customer_name: str
-	adress: str
+	address: str
 	billing_address : str
+	status: str | None = 'draft'
 	details: List[OrderDetailCreate]
 
 class OrderUpdate(BaseModel):

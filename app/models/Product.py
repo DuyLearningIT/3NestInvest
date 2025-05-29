@@ -11,7 +11,7 @@ class Product(Base):
 	product_role = Column(String(255), default='admin')
 	category_id = Column(Integer, ForeignKey('tb_category.category_id'), nullable=False)
 	description = Column(String(255))
-	sku_partnumber = Column(String(100))
+	sku_partnumber = Column(String(100)) # It's a kind of product number
 	price = Column(Float, nullable=False)
 	channel_cost = Column(Float, default= 0) # This means how much money does the business have to pay for us
 	maximum_discount = Column(Float, default = 0)

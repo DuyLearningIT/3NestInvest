@@ -69,7 +69,7 @@ def get_products(db : Session):
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
-				'desciption' : pro.description,
+				'description' : pro.description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
@@ -193,13 +193,13 @@ def get_products_by_category(db: Session, category_id: int):
 
 def get_products_by_type(db: Session, type_id: int):
 	try:
-		# Check if needed, then -> Add
-		# type_ = db.query(Type).filter(Type.type_id == type_id).first()
-		# if type_ is None:
-		# 	return {
-		# 		'mess' : 'Type not found !',
-		# 		'status_code': 404
-		# 	}
+		# Check if needed, then -> Add (Added to determine type)
+		type_ = db.query(Type).filter(Type.type_id == type_id).first()
+		if type_ is None:
+			raise HTTPException(
+				detail = 'Type not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
 		cates = db.query(Category).filter(Category.type_id == type_id).all()
 		pros = []
 		for cate in cates:
@@ -313,5 +313,45 @@ def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 	except Exception as ex:
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+# User required
+# This function is used for user who log-in into our website and with their role
+def get_products_by_category_and_role(db: Session, category_id: int, current_user : dict):
+	try:
+		products = db.query(Product).filter(Product.product_role == current_user['role']).all()
+		pros = []
+		for pro in products:
+			cate = db.query(Category).filter(Category.category_id == category_id).first()
+			if cate is None:
+				raise HTTPException (
+					detail = 'Category not found !',
+					status_code = status.HTTP_404_NOT_FOUND
+				)
+			if pro.category_id == category_id:
+				obj = {
+					'product_id' : pro.product_id,
+					'product_name' : pro.product_name,
+					'sku_partnumber' : pro.sku_partnumber,
+					'product_role' : pro.product_role,
+					'description' : pro.description,
+					'price' : pro.price,
+					'category_name': cate.category_name,
+					'maximum_discount' : pro.maximum_discount,
+					'maximum_discount_price' : pro.maximum_discount_price,
+					'channel_cost' : pro.channel_cost,
+					'created_at' : pro.created_at,
+					'status' : pro.status
+				}
+				pros.append(obj)
+		return {
+			'mess' : 'Get products by role and category sucessfully !',
+			'satus_code' : status.HTTP_200_OK,
+			'data' : pros
+		}
+	except Exception as ex:
+		raise HTTPException(
+			detail = f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
