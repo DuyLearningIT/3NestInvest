@@ -48,7 +48,7 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 				order_id=db_order.order_id,
 				product_id=detail.product_id,
 				quantity=detail.quantity,
-				price_for_customer =detail.price_for_customer,#if the role is channels -> then don't care this field
+				price_for_customer =detail.price_for_customer, #if the role is channels -> then don't care this field
 				service_contract_duration = detail.service_contract_duration,
 				final_price=final_price
 			)
@@ -73,6 +73,7 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 def get_orders(db: Session):
 	try:
 		# Here I'm getting all the orders, and about admin site, just get all orders that have status is not draft
+		# Need to modify this code --> Because admin or manager just can see the orders which have the status if submitted
 		orders = db.query(Order).all()
 		ods = []
 		for order in orders:

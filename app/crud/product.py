@@ -283,7 +283,12 @@ def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 		pros = []
 		for pro in products:
 			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
-			# Can determine whether category is None or not
+			# Can determine whether category is None or not (checked)
+			if cate is None:
+				raise HTTPException(
+					detail = 'Category not found !',
+					status_code = status.HTTP_404_NOT_FOUND
+				)
 			if cate.type_id == type_id:
 				obj = {
 					'product_id' : pro.product_id,

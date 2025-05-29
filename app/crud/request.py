@@ -94,7 +94,7 @@ def delete_request(db: Session, request_id:int):
 		db.delete(request)
 		db.commit()
 		return {
-			'mess' : 'Get request successfully !',
+			'mess' : 'Delete request successfully !',
 			'status_code': status.HTTP_204_NO_CONTENT
 		}
 	except Exception as ex:
