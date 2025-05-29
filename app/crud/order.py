@@ -7,64 +7,70 @@ from fastapi import HTTPException, status
 
 # User required
 def create_order(db: Session, order : OrderCreate, current_user: dict):
-    try:
-        user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-        if user is None:
-            raise HTTPException(
+	try:
+		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
+		if user is None:
+			raise HTTPException(
 				detail= 'User not found !',
 				status_code = status.HTTP_404_NOT_FOUND
 			)
 
-        db_order = Order(
-            user_id=user.user_id,
-            order_title=order.order_title,
-            created_by=user.user_name,
-            customer_name=order.customer_name
-        )
-        db.add(db_order)
-        db.commit()
-        db.refresh(db_order)
+		db_order = Order(
+			user_id=user.user_id,
+			order_title=order.order_title,
+			created_by=user.user_name,
+			customer_name=order.customer_name, 
+			address = order.address,
+			billing_address = order.address
+		)
+		db.add(db_order)
+		db.commit()
+		db.refresh(db_order)
 
-        total_budget = 0
+		total_budget = 0
 
-        for detail in order.details:
-            product = db.query(Product).filter(Product.product_id == detail.product_id).first()
+		for detail in order.details:
+			product = db.query(Product).filter(Product.product_id == detail.product_id).first()
 
-            if detail.discount_percent > product.maximum_discount:
-                raise HTTPException(
-					detail= 'Discount percent cannot exceed maximum discount percent !',
-					status_code = status.HTTP_400_BAD_REQUEST
-				)
+			if current_user['role'] == 'channels':
+				final_price = product.channel_cost * detail.quantity
+				total_budget += final_price
+			else:
+				if detail.price_for_customer < product.maximum_discount_price:
+					raise HTTPException(
+						detail= 'Price for customer cannot be lower than minimun price !',
+						status_code = status.HTTP_400_BAD_REQUEST
+					)
+				final_price = detail.price_for_customer * detail.quantity
+				total_budget += final_price
 
-            final_price = product.price * detail.quantity * (1 - (detail.discount_percent / 100))
-            total_budget += final_price
+			db_detail = OrderDetails(
+				order_id=db_order.order_id,
+				product_id=detail.product_id,
+				quantity=detail.quantity,
+				price_for_customer =detail.price_for_customer,#if the role is channels -> then don't care this field
+				service_contract_duration = detail.service_contract_duration,
+				final_price=final_price
+			)
+			db.add(db_detail)
 
-            db_detail = OrderDetails(
-                order_id=db_order.order_id,
-                product_id=detail.product_id,
-                quantity=detail.quantity,
-                discount_percent=detail.discount_percent,
-                final_price=final_price
-            )
-            db.add(db_detail)
+		db_order.total_budget = total_budget
+		db.commit()
 
-        db_order.total_budget = total_budget
-        db.commit()
+		return {
+			'mess': 'Create order successfully!',
+			'status_code': status.HTTP_201_CREATED,
+			'data': db_order
+		}
 
-        return {
-            'mess': 'Create order successfully!',
-            'status_code': status.HTTP_201_CREATED,
-            'data': db_order
-        }
-
-    except Exception as ex:
-        raise HTTPException(
+	except Exception as ex:
+		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
 # Admin required
-def get_orders(db: Session, admin: dict):
+def get_orders(db: Session):
 	try:
 		# Here I'm getting all the orders, and about admin site, just get all orders that have status is not draft
 		orders = db.query(Order).all()
@@ -80,7 +86,9 @@ def get_orders(db: Session, admin: dict):
 				'phone' : user.phone,
 				'company_name' : user.company_name,
 				'total_budget' : order.total_budget,
-				'status' : order.status
+				'status' : order.status,
+				'address' : order.address,
+				'billing_address' : order.billing_address
 			}
 			ods.append(obj)
 		return {
@@ -133,7 +141,9 @@ def get_order_by_user(db: Session, current_user: dict):
 				'user_email' : user.user_email,
 				'company_name' : user.company_name,
 				'total_budget' : order.total_budget,
-				'status' : order.status
+				'status' : order.status,
+				'address' : order.address,
+				'billing_address' : order.billing_address
 			}
 			ods.append(obj)
 		return {
@@ -168,6 +178,8 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 			order.status = request.status or order.status
 			order.updated_at = datetime.utcnow()
 			order.updated_by = user.user_name
+			order.address = request.address or order.address
+			order.billing_address = request.billing_address or order.billing_address
 
 			db.commit()
 			return {

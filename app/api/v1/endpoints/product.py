@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.schemas import CreateProduct, UpdateProduct
 from app.db import db_depend
 from app.crud import product as product_crud
-from app.utils import admin_required
+from app.utils import admin_required, get_current_user
 
 router = APIRouter(
 	prefix = '/products',
@@ -47,10 +47,10 @@ async def delete_product(db: db_depend, product_id : int, admin = Depends(admin_
 	response = product_crud.delete_product(db, product_id)
 	return response
 
-# Admin required
+# User required
 @router.get('/get-products-by-role')
-async def get_products_by_role(db: db_depend, role: str, admin = Depends(admin_required)):
-	response = product_crud.get_products_by_role(db, role)
+async def get_products_by_role(db: db_depend, current_user = Depends(get_current_user)):
+	response = product_crud.get_products_by_role(db, current_user)
 	return response
 
 # Admin required

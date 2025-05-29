@@ -13,6 +13,7 @@ class Product(Base):
 	description = Column(String(255))
 	sku_partnumber = Column(String(100))
 	price = Column(Float, nullable=False)
+	channel_cost = Column(Float, default= 0) # This means how much money does the business have to pay for us
 	maximum_discount = Column(Float, default = 0)
 	maximum_discount_price = Column(Float, default = price - ( maximum_discount * price / 100 ))
 	status = Column(Boolean, default = True)

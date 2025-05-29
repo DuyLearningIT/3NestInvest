@@ -10,6 +10,8 @@ class Order(Base):
 	customer_name = Column(String(50))
 	status = Column(String(50), default = 'draft')
 	order_title = Column(String(255))
+	address = Column(String(255))
+	billing_address = Column(String(255))
 	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
 	total_budget = Column(Float, default = 0)
 	created_at = Column(DateTime, default = datetime.utcnow)

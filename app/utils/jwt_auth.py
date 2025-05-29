@@ -27,16 +27,18 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_name = payload.get('user_name')
         user_email = payload.get('user_email')
         user_id = payload.get('user_id')
         role = payload.get('role')
         if user_id is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id, user_email=user_email, role=role)
+        token_data = TokenData(user_id=user_id, user_name=user_name, user_email=user_email, role=role)
     except InvalidTokenError:
         raise credentials_exception
 
     return {
+        'user_name' : token_data.user_name,
         'user_id': token_data.user_id,
         'user_email': token_data.user_email,
         'role': token_data.role

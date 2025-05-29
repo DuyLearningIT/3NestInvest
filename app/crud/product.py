@@ -27,6 +27,7 @@ def create_product(db: Session, request : CreateProduct, admin: dict):
 			maximum_discount = request.maximum_discount,
 			category_id = request.category_id,
 			product_role = request.product_role,
+			channel_cost = request.channel_cost,
 			created_by = admin['user_name']
 		)
 		db.add(new_pro)
@@ -45,6 +46,7 @@ def create_product(db: Session, request : CreateProduct, admin: dict):
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
 				'maximum_discount' : new_pro.maximum_discount,
 				'maximum_discount_price' : new_pro.maximum_discount_price ,
+				'channel_cost' : new_pro.channel_cost,
 				'created_at' : new_pro.created_at,
 				'created_by' : new_pro.created_by
 			}
@@ -72,7 +74,8 @@ def get_products(db : Session):
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
 				'maximum_discount' : pro.maximum_discount,
-				'maximum_discount_price' : pro.maximum_discount_price ,
+				'maximum_discount_price' : pro.maximum_discount_price,
+				'channel_cost' : pro.channel_cost,
 				'created_at' : pro.created_at,
 				'status' : pro.status
 			}
@@ -121,7 +124,8 @@ def get_product(db: Session, product_id : int):
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
 				'maximum_discount' : pro.maximum_discount,
-				'maximum_discount_price' : pro.maximum_discount_price ,
+				'maximum_discount_price' : pro.maximum_discount_price,
+				'channel_cost' : pro.channel_cost,
 				'created_at' : pro.created_at,
 				'status' : pro.status
 			}
@@ -148,6 +152,7 @@ def update_product(db: Session, request : UpdateProduct, admin: dict):
 		pro.price = request.price or pro.price
 		pro.maximum_discount = request.maximum_discount or pro.maximum_discount
 		pro.maximum_discount_price = pro.price - ( pro.maximum_discount * pro.price ) / 100
+		pro.channel_cost  = request.channel_cost or pro.channel_cost
 		pro.status = request.status or pro.status
 		pro.updated_at = datetime.utcnow()
 		pro.updated_by = admin['user_name']
@@ -176,7 +181,8 @@ def get_products_by_category(db: Session, category_id: int):
 					Product.price, 
 					Product.sku_partnumber, 
 					Product.maximum_discount,
-					Product.maximum_discount_price 
+					Product.maximum_discount_price,
+					Product.channel_cost
 				)).filter(Product.category_id == category_id).all()
 		}
 	except Exception as ex:
@@ -235,10 +241,11 @@ def delete_product(db: Session, product_id : int):
 			detail=f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
-# Admin require
-def get_products_by_role(db: Session, role: str):
+
+# User required
+def get_products_by_role(db: Session, current_user: dict):
 	try:
-		pros = db.query(Product).filter(Product.product_role == role).all()
+		pros = db.query(Product).filter(Product.product_role == current_user['role']).all()
 		products = []
 		for pro in pros:
 			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
@@ -253,6 +260,7 @@ def get_products_by_role(db: Session, role: str):
 				'category_name': cate.category_name,
 				'maximum_discount' : pro.maximum_discount,
 				'maximum_discount_price' : pro.maximum_discount_price ,
+				'channel_cost' : pro.channel_cost,
 				'created_at' : pro.created_at,
 				'status' : pro.status
 			}
@@ -286,7 +294,8 @@ def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 					'price' : pro.price,
 					'category_name': cate.category_name,
 					'maximum_discount' : pro.maximum_discount,
-					'maximum_discount_price' : pro.maximum_discount_price ,
+					'maximum_discount_price' : pro.maximum_discount_price,
+					'channel_cost' : pro.channel_cost,
 					'created_at' : pro.created_at,
 					'status' : pro.status
 				}

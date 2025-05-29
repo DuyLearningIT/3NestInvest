@@ -8,6 +8,7 @@ class CreateProduct(BaseModel):
 	sku_partnumber : str | None = None 
 	price : float 
 	maximum_discount : float
+	channel_cost: float
 
 class UpdateProduct(BaseModel):
 	product_id : int
@@ -18,4 +19,5 @@ class UpdateProduct(BaseModel):
 	sku_partnumber : str | None = None 
 	price : float | None = None
 	maximum_discount : float | None = None
+	channel_cost: float | None = None
 	status : bool | None = False
