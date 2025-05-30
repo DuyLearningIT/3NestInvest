@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 @router.get('/get-request')
-async def get_request(db: db_depend, request_id):
+async def get_request(db: db_depend, request_id: int, admin = Depends(admin_required)):
 	response = request_crud.get_request(db, request_id)
 	return response
 
@@ -25,8 +25,9 @@ async def create_request(db: db_depend, request: CreateRequest):
 	response = request_crud.create_request(db, request)
 	return response
 
+# Admin required
 @router.post('/update-request')
-async def update_request(db: db_depend, request: UpdateRequest):
+async def update_request(db: db_depend, request: UpdateRequest, admin = Depends(admin_required)):
 	response = request_crud.update_request(db, request)
 	return response 
 

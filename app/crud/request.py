@@ -24,6 +24,7 @@ def create_request(db: Session, request : CreateRequest):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
+# Admin required
 def update_request(db: Session, request: UpdateRequest):
 	try:
 		check = db.query(UserRequest).filter(UserRequest.request_id == request.request_id).first()
@@ -49,6 +50,7 @@ def update_request(db: Session, request: UpdateRequest):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
+# Admin required
 def get_request(db: Session, request_id):
 	try: 
 		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
