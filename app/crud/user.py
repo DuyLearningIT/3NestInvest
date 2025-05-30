@@ -96,7 +96,7 @@ def login(db: Session, user: UserLogin):
 				'role' : check.role,
 				'user_name' : check.user_name
 			},
-			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role, 'company_name' : check.company_name, 'phone' : check.phone})
+			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role})
 		}
 	except Exception as ex:
 		raise HTTPException(
@@ -186,7 +186,7 @@ def delete_user (db: Session, user_id: int):
 def get_my_info(db: Session, current_user: dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-		if check is None:
+		if user is None:
 			raise HTTPException(
 			detail= 'User not found !',
 			status_code = status.HTTP_404_NOT_FOUND

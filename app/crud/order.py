@@ -260,3 +260,35 @@ def get_order_details_by_order(db: Session, order_id : int):
 			detail = f'Somethign was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
+
+# User required
+def delete_order(db: Session, order_id: int, current_user: dict):
+	try:
+		order = db.query(Order).filter(Order.order_id == order_id).first()
+		if order is None:
+			raise HTTPException(
+				detail = 'Order not found !',
+				status_code = status_code.HTTP_404_NOT_FOUND
+			)
+		user_id = current_user['user_id']
+		if user_id != order.user_id:
+			raise HTTPException(
+				detail = 'You cannot remove the order that is not your own !',
+				status_code = status.HTTP_403_FORBIDDEN
+			)
+		if order.status == 'submitted':
+			raise HTTPException(
+				detail = 'Order was submitted ! Cannot edit or remove !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
+		db.delete(order)
+		db.commit()
+		return {
+			'mess' : 'Delete order successfully !',
+			'status_code' : status.HTTP_204_NO_CONTENT
+		}
+	except Exception as ex:
+		raise HTTPException(
+			detail = f'Something was wrong {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
