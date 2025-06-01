@@ -131,7 +131,8 @@ def get_order(db: Session, order_id : int):
 
 def get_order_by_user(db: Session, current_user: dict):
 	try:
-		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
+		user_id = current_user['user_id']
+		user = db.query(User).filter(User.user_id == user_id).first()
 		if user is None:
 			raise HTTPException(
 				detail= 'User not found !',
