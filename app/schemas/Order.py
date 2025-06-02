@@ -18,7 +18,7 @@ class OrderCreate(BaseModel):
 class OrderUpdate(BaseModel):
 	order_id : int
 	order_title: str | None = None
-	order_status: str | None = None
+	status: str | None = None
 	customer_name: str | None = None
 	address: str | None = None
 	billing_address: str | None = None

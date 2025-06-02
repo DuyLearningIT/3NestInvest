@@ -39,7 +39,7 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 			else:
 				if detail.price_for_customer < product.maximum_discount_price:
 					raise HTTPException(
-						detail= 'Price for customer cannot be lower than minimun price !',
+						detail= 'Price for customer cannot be lower than minimum price !',
 						status_code = status.HTTP_400_BAD_REQUEST
 					)
 				final_price = detail.price_for_customer * detail.quantity
