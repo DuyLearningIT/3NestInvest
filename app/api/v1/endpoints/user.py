@@ -3,6 +3,7 @@ from app.schemas import UserCreate, UserLogin, UserUpdate, UserChangePassword
 from app.db import db_depend
 from app.crud import user as user_crud
 from app.utils import create_access_token, get_current_user, admin_required
+from pydantic import EmailStr
 
 router = APIRouter(
 	prefix = '/users',
@@ -54,4 +55,15 @@ async def delete_user(db: db_depend, user_id : int, admin = Depends(admin_requir
 @router.get('/my-info')
 async def get_my_info(db: db_depend, current_user = Depends(get_current_user)):
 	response = user_crud.get_my_info(db, current_user)
+	return response
+
+@router.post('/reset-password')
+async def reset_password(db: db_depend, email: EmailStr, phone: str):
+	response = await user_crud.forgot_password(db, email, phone)
+	return response
+
+# Admin required
+@router.get('/get-users-by-role')
+async def get_users_by_role(db: db_depend, role: str, admin = Depends(admin_required)):
+	response = user_crud.get_orders_by_role(db, role)
 	return response

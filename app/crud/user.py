@@ -1,16 +1,19 @@
 from sqlalchemy.orm import Session, load_only
 from app.models import User
 from app.schemas import UserCreate, UserLogin, UserUpdate, UserChangePassword
-from app.utils import hash_password, create_access_token, verify_password
+from app.utils import hash_password, create_access_token, verify_password, conf, generate_random_password
 from datetime import datetime
 from fastapi import HTTPException, status
+from fastapi_mail import MessageSchema, MessageType, FastMail
+import uuid
+from pydantic import EmailStr
 
 def get_users(db: Session, admin_required : dict):
 	try:
 		return {
 			'mess' : 'Get all users successfully !',
 			'status_code' : status.HTTP_200_OK,
-			'data' : db.query(User).options(load_only(User.user_id, User.user_name, User.user_email, User.role, User.company_name, User.phone)).all()
+			'data' : db.query(User).all()
 		}
 	except Exception as ex:
 		raise HTTPException(
@@ -20,7 +23,7 @@ def get_users(db: Session, admin_required : dict):
 
 def get_user(db: Session, user_id : int):
 	try:
-		user = db.query(User).options(load_only(User.user_id, User.user_name, User.user_email, User.role)).filter(User.user_id == user_id).first()
+		user = db.query(User).filter(User.user_id == user_id).first()
 		if user is None:
 			raise HTTPException(
 				detail= 'User not found !',
@@ -199,5 +202,76 @@ def get_my_info(db: Session, current_user: dict):
 	except Exception as ex:
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+async def forgot_password(db: Session, email: EmailStr, phone: str):
+    try:
+        check = db.query(User).filter(User.user_email == email).first()
+        if check is None:
+            raise HTTPException(
+                detail="User not found!",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Verify phone number
+        if check.phone != phone.strip():
+            raise HTTPException(
+                detail="Phone doesn't match with your account!",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Generate new password and hash it
+        new_password = generate_random_password()
+        check.hashed_password = hash_password(new_password)
+        db.commit()
+        db.refresh(check)
+		
+		# Prepare content of email
+        subject = "Password Reset for Your Account"
+        body = f"""
+        Dear {check.user_name or 'User'},
+        
+        Your password has been reset successfully. Your new password is:
+
+        {new_password}
+
+        Please log in with this password and change it immediately for security purposes.
+        
+        Regards,
+        3Nest Invest Developer Team
+        """
+        message = MessageSchema(
+            subject=subject,
+            recipients=[email],  
+            body=body,
+            subtype=MessageType.plain
+        )
+        fm = FastMail(conf)
+        await fm.send_message(message)
+
+        return {
+			"mess": "Password reset successfully. Check your email for the new password.",
+			'status_code' : 200
+		}
+
+    except Exception as ex:
+        raise HTTPException(
+            detail=f"Something went wrong: {ex}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# Admin required
+def get_users_by_role(db: Session, role: str):
+	try:
+		users = db.query(User).filter(User.role == role).all()
+		return {
+			'mess': 'Get users by role successfully !',
+			'status_code': 200,
+			'data' : users
+		}
+	except Exception as ex:
+		raise HTTPException(
+			detail = f'Something was wrong : {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)

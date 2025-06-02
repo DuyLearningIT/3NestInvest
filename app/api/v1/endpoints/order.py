@@ -30,7 +30,7 @@ async def get_order_by_user(db: db_depend, current_user = Depends(get_current_us
 # User required
 @router.post('/update-order')
 async def update_order(db: db_depend, request : OrderUpdate ,current_user = Depends(get_current_user)):
-	response = order_crud.update_order(db, current_user)
+	response = order_crud.update_order(db, request, current_user)
 	return response
 
 # User required
@@ -55,4 +55,10 @@ async def get_order_details_by_order(db: db_depend, order_id: int, current_user 
 @router.delete('/delete-order')
 async def delete_order(db: db_depend, order_id: int, current_user = Depends(get_current_user)):
 	response = order_crud.delete_order(db, order_id, current_user)
+	return response
+
+# Admin required
+@router.get('/orders-by-role')
+async def get_orders_by_role(db: db_depend, role: str, admin= Depends(admin_required)):
+	response = order_crud.get_orders_by_role(db, role)
 	return response

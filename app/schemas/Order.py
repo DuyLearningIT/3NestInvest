@@ -22,3 +22,4 @@ class OrderUpdate(BaseModel):
 	customer_name: str | None = None
 	address: str | None = None
 	billing_address: str | None = None
+	details: List[OrderDetailCreate]

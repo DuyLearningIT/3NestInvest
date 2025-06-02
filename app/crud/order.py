@@ -149,6 +149,7 @@ def get_order_by_user(db: Session, current_user: dict):
 				'customer_name' : order.customer_name,
 				'order_title' : order.order_title,
 				'user_email' : user.user_email,
+				'user_name' : user.user_name,
 				'company_name' : user.company_name,
 				'total_budget' : order.total_budget,
 				'status' : order.status,
@@ -191,7 +192,8 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 			order.updated_by = user.user_name
 			order.address = request.address or order.address
 			order.billing_address = request.billing_address or order.billing_address
-
+			order.details = request.details or order.details
+			
 			db.commit()
 			return {
 				'mess' : 'Update order successfully !',
@@ -285,6 +287,10 @@ def delete_order(db: Session, order_id: int, current_user: dict):
 				detail = 'Order was submitted ! Cannot edit or remove !',
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
+		details = db.query(OrderDetails).filter(OrderDetails.order_id == order.order_id).all()
+		for detail in details:
+			db.delete(detail)
+			db.commit()
 		db.delete(order)
 		db.commit()
 		return {
@@ -294,5 +300,41 @@ def delete_order(db: Session, order_id: int, current_user: dict):
 	except Exception as ex:
 		raise HTTPException(
 			detail = f'Something was wrong {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+# Admin required 
+def get_orders_by_role(db: Session, role: str):
+	try:
+		orders = db.query(Order).all()
+		ods = []
+		for order in orders:
+			user = db.query(User).filter(User.user_id == order.user_id).first()
+			if user is None:
+				raise HTTPException(
+					detail = 'User not found !',
+					status_code = status.HTTP_404_NOT_FOUND
+				)
+			if user.role == role:
+				obj = {
+					'order_id' : order.order_id,
+					'order_title' : order.order_title,
+					'user_name' : user.user_name,
+					'user_email' : user.user_email,
+					'company_name' : user.company_name,
+					'customer_name' : order.customer_name,
+					'total_budget' : order.total_budget,
+					'status' : order.status,
+					'created_at' : order.created_at
+				}
+				ods.append(obj)
+		return {
+			'mess' : 'Get orders by role successfully !',
+			'status_code': status.HTTP_200_OK,
+			'data' : ods
+		}
+	except Exception as ex:
+		raise HTTPException (
+			detail = f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
