@@ -95,7 +95,8 @@ def get_orders(db: Session):
 				'total_budget' : order.total_budget,
 				'status' : order.status,
 				'address' : order.address,
-				'billing_address' : order.billing_address
+				'billing_address' : order.billing_address,
+				'created_at' : order.created_at
 			}
 			ods.append(obj)
 		return {
@@ -145,13 +146,15 @@ def get_order_by_user(db: Session, current_user: dict):
 			user = db.query(User).filter(User.user_id == user_id).first()
 			obj = {
 				'order_id' : order.order_id,
+				'customer_name' : order.customer_name,
 				'order_title' : order.order_title,
 				'user_email' : user.user_email,
 				'company_name' : user.company_name,
 				'total_budget' : order.total_budget,
 				'status' : order.status,
 				'address' : order.address,
-				'billing_address' : order.billing_address
+				'billing_address' : order.billing_address,
+				'created_at' : order.created_at
 			}
 			ods.append(obj)
 		return {
