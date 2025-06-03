@@ -40,7 +40,7 @@ def create_product(db: Session, request : CreateProduct, admin: dict):
 				'product_id' : new_pro.product_id,
 				'product_name' : new_pro.product_name,
 				'sku_partnumber' : new_pro.sku_partnumber,
-				'desciption' : new_pro.description,
+				'description' : new_pro.description,
 				'price' : new_pro.price,
 				'product_role' : new_pro.product_role,
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
@@ -119,7 +119,7 @@ def get_product(db: Session, product_id : int):
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
-				'desciption' : pro.description,
+				'description' : pro.description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
@@ -255,7 +255,7 @@ def get_products_by_role(db: Session, current_user: dict):
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
-				'desciption' : pro.description,
+				'description' : pro.description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'maximum_discount' : pro.maximum_discount,
@@ -306,7 +306,7 @@ def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 				}
 				pros.append(obj)
 		return {
-			'mess': 'Get products successflly !',
+			'mess': 'Get products successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data': pros
 		}

@@ -15,10 +15,13 @@ class Order(Base):
 	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
 	total_budget = Column(Float, default = 0)
 	created_at = Column(DateTime, default = datetime.utcnow)
+	contact_name = Column(String(255), nullable = False, default=' ')
+	contact_email = Column(String(255), nullable = False, default=' ')
+	contact_phone = Column(String(255), nullable = False, default=' ')
 	created_by = Column(String(50))
 	updated_at = Column(DateTime)
 	updated_by = Column(String(50))
 
 	# Set relationship
 	user = relationship('User', back_populates='orders')
-	order_details = relationship('OrderDetails', back_populates='order')
+	order_details = relationship('OrderDetails', back_populates='order', cascade='all, delete-orphan')

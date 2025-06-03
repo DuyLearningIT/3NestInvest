@@ -22,7 +22,10 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 			customer_name=order.customer_name, 
 			address = order.address,
 			billing_address = order.address,
-			status = order.status
+			status = order.status,
+			contact_email = order.contact_email,
+			contact_name = order.contact_name,
+			contact_phone = order.contact_phone
 		)
 		db.add(db_order)
 		db.commit()
@@ -80,7 +83,7 @@ def get_orders(db: Session):
 	try:
 		# Here I'm getting all the orders, and about admin site, just get all orders that have status is not draft
 		# Need to modify this code --> Because admin or manager just can see the orders which have the status if submitted
-		orders = db.query(Order).all()
+		orders = db.query(Order).filter(Order.status != 'draft').all()
 		ods = []
 		for order in orders:
 			user = db.query(User).filter(User.user_id == order.user_id).first()
@@ -96,7 +99,10 @@ def get_orders(db: Session):
 				'status' : order.status,
 				'address' : order.address,
 				'billing_address' : order.billing_address,
-				'created_at' : order.created_at
+				'created_at' : order.created_at,
+				'contact_name' : order.contact_name,
+				'contact_email' : order.contact_email,
+				'contact_phone' : order.contact_phone
 			}
 			ods.append(obj)
 		return {
@@ -155,7 +161,10 @@ def get_order_by_user(db: Session, current_user: dict):
 				'status' : order.status,
 				'address' : order.address,
 				'billing_address' : order.billing_address,
-				'created_at' : order.created_at
+				'created_at' : order.created_at,
+				'contact_name' : order.contact_name,
+				'contact_email' : order.contact_email,
+				'contact_phone' : order.contact_phone
 			}
 			ods.append(obj)
 		return {
@@ -193,6 +202,9 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 			order.address = request.address or order.address
 			order.billing_address = request.billing_address or order.billing_address
 			order.details = request.details or order.details
+			order.contact_name = request.contact_name or order.contact_name
+			order.contact_email = request.contact_email or order.contact_email
+			order.contact_phone = request.contact_phone or order.contact_phone
 			
 			db.commit()
 			return {

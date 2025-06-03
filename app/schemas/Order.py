@@ -10,6 +10,9 @@ class OrderDetailCreate(BaseModel):
 class OrderCreate(BaseModel):
 	order_title : str
 	customer_name: str
+	contact_name: str
+	contact_email: str
+	contact_phone: str
 	address: str
 	billing_address : str
 	status: str | None = 'draft'
@@ -22,4 +25,7 @@ class OrderUpdate(BaseModel):
 	customer_name: str | None = None
 	address: str | None = None
 	billing_address: str | None = None
+	contact_name: str | None = None
+	contact_email: str | None = None
+	contact_phone: str | None = None
 	details: List[OrderDetailCreate]
