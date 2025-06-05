@@ -6,6 +6,8 @@ from app.api.v1.endpoints import type as type_router
 from app.api.v1.endpoints import product as pro_router
 from app.api.v1.endpoints import request as request_router
 from app.api.v1.endpoints import order as order_router
+# from app.api.v1.endpoints import chatbot as chatbot_router
+from app.api.v1.endpoints import deal as deal_router
 
 app = FastAPI()
 
@@ -23,6 +25,9 @@ app.include_router(type_router.router)
 app.include_router(pro_router.router)
 app.include_router(request_router.router)
 app.include_router(order_router.router)
+# app.include_router(chatbot_router.router)
+app.include_router(deal_router.router)
+
 
 @app.get('/')
 async def default():

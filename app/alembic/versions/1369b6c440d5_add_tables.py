@@ -1,8 +1,8 @@
 """add tables
 
-Revision ID: eb9739d44c6b
+Revision ID: 1369b6c440d5
 Revises: 
-Create Date: 2025-05-21 15:27:28.325825
+Create Date: 2025-06-05 14:31:12.780449
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'eb9739d44c6b'
+revision: str = '1369b6c440d5'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -74,18 +74,39 @@ def upgrade() -> None:
     sa.UniqueConstraint('category_name')
     )
     op.create_index(op.f('ix_tb_category_category_id'), 'tb_category', ['category_id'], unique=False)
-    op.create_table('tb_order',
-    sa.Column('order_id', sa.Integer(), nullable=False),
-    sa.Column('customer_name', sa.String(length=50), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=True),
+    op.create_table('tb_deal',
+    sa.Column('deal_id', sa.Integer(), nullable=False),
+    sa.Column('deal_type', sa.String(length=50), nullable=True),
     sa.Column('description', sa.String(length=255), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('total_budget', sa.Float(), nullable=True),
+    sa.Column('tax_indentification_number', sa.String(length=50), nullable=True),
+    sa.Column('customer_name', sa.String(length=100), nullable=True),
+    sa.Column('domain_name', sa.String(length=50), nullable=True),
+    sa.Column('status', sa.String(length=50), nullable=True),
+    sa.Column('contact_name', sa.String(length=255), nullable=False),
+    sa.Column('contact_email', sa.String(length=255), nullable=False),
+    sa.Column('contact_phone', sa.String(length=255), nullable=False),
+    sa.Column('address', sa.String(length=255), nullable=True),
+    sa.Column('billing_address', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('created_by', sa.String(length=50), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('updated_by', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['tb_user.user_id'], ),
+    sa.PrimaryKeyConstraint('deal_id')
+    )
+    op.create_index(op.f('ix_tb_deal_deal_id'), 'tb_deal', ['deal_id'], unique=False)
+    op.create_table('tb_order',
+    sa.Column('order_id', sa.Integer(), nullable=False),
+    sa.Column('deal_id', sa.Integer(), nullable=False),
+    sa.Column('status', sa.String(length=50), nullable=True),
+    sa.Column('order_title', sa.String(length=255), nullable=True),
+    sa.Column('total_budget', sa.Float(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_by', sa.String(length=50), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_by', sa.String(length=50), nullable=True),
+    sa.ForeignKeyConstraint(['deal_id'], ['tb_deal.deal_id'], ),
     sa.PrimaryKeyConstraint('order_id')
     )
     op.create_index(op.f('ix_tb_order_order_id'), 'tb_order', ['order_id'], unique=False)
@@ -97,6 +118,7 @@ def upgrade() -> None:
     sa.Column('description', sa.String(length=255), nullable=True),
     sa.Column('sku_partnumber', sa.String(length=100), nullable=True),
     sa.Column('price', sa.Float(), nullable=False),
+    sa.Column('channel_cost', sa.Float(), nullable=True),
     sa.Column('maximum_discount', sa.Float(), nullable=True),
     sa.Column('maximum_discount_price', sa.Float(), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=True),
@@ -114,8 +136,9 @@ def upgrade() -> None:
     sa.Column('order_id', sa.Integer(), nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
-    sa.Column('discount_percent', sa.Float(), nullable=True),
+    sa.Column('price_for_customer', sa.Float(), nullable=True),
     sa.Column('final_price', sa.Float(), nullable=True),
+    sa.Column('service_contract_duration', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['order_id'], ['tb_order.order_id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['tb_product.product_id'], ),
     sa.PrimaryKeyConstraint('order_details_id')
@@ -133,6 +156,8 @@ def downgrade() -> None:
     op.drop_table('tb_product')
     op.drop_index(op.f('ix_tb_order_order_id'), table_name='tb_order')
     op.drop_table('tb_order')
+    op.drop_index(op.f('ix_tb_deal_deal_id'), table_name='tb_deal')
+    op.drop_table('tb_deal')
     op.drop_index(op.f('ix_tb_category_category_id'), table_name='tb_category')
     op.drop_table('tb_category')
     op.drop_index(op.f('ix_tb_user_request_request_id'), table_name='tb_user_request')

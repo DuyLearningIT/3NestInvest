@@ -30,7 +30,7 @@ async def get_user(db: db_depend, user_id : int, current_user= Depends(get_curre
 
 @router.post('/login')
 async def login(db: db_depend, request: UserLogin):
-	response = user_crud.login(db, request)
+	response = await user_crud.login(db, request)
 	return response
 
 # User required

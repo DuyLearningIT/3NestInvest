@@ -51,3 +51,21 @@ def admin_required(current_user: dict = Depends(get_current_user)):
             detail='Admin access required !'
         )
     return current_user
+
+def manager_required(current_user: dict = Depends(get_current_user)):
+    if current_user.get('role') != 'manager':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Manager access required !'
+        )
+    return current_user
+
+
+def high_level_required(current_user: dict = Depends(get_current_user)):
+    role = current_user.get('role')
+    if role != 'admin' and role != 'manager':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Admin or manager access required !'
+        )
+    return current_user

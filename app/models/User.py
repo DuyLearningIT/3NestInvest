@@ -20,4 +20,4 @@ class User(Base):
 	updated_by = Column(String(50), default = 'admin')
 	
 	# set relationship
-	orders = relationship('Order', back_populates='user', cascade="all, delete-orphan")
+	deals = relationship('Deal', back_populates='user', cascade="all, delete-orphan" )

@@ -79,7 +79,7 @@ def create_user(db: Session, user: UserCreate, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def login(db: Session, user: UserLogin):
+async def login(db: Session, user: UserLogin):
 	try:
 		check = db.query(User).filter(User.user_email == user.user_email).first()
 		if check is None:
@@ -107,7 +107,7 @@ def login(db: Session, user: UserLogin):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def update_user(db: Session, user: UserUpdate, current_user: dict):
+def update_user(db: Session, user: UserUpdate):
 	try:
 		check = db.query(User).filter(User.user_id == user.user_id).first()
 		if check is None: 

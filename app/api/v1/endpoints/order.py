@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.schemas import OrderCreate, OrderUpdate
 from app.db import db_depend
 from app.crud import order as order_crud
-from app.utils import get_current_user, admin_required
+from app.utils import get_current_user, admin_required, high_level_required
 
 router = APIRouter(
 	prefix = '/orders',
@@ -39,10 +39,10 @@ async def get_order(db: db_depend, order_id: int, current_user = Depends(get_cur
 	response = order_crud.get_order(db, order_id)
 	return response
 
-# Admin required
+# Admin or Manage required
 @router.post('/change-status-of-order')
-async def change_status_of_order(db: db_depend, status: str, order_id : int, admin = Depends(admin_required),):
-	response = order_crud.change_status_of_order(db, admin, status, order_id)
+async def change_status_of_order(db: db_depend, status: str, order_id : int, admin = Depends(high_level_required)):
+	response = order_crud.change_status_of_order(db, status, order_id)
 	return response
 
 # User required

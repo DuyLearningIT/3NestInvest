@@ -7,21 +7,15 @@ class Order(Base):
 	__tablename__ = 'tb_order'
 
 	order_id = Column(Integer, primary_key=True, index=True)
-	customer_name = Column(String(50))
+	deal_id = Column(Integer, ForeignKey('tb_deal.deal_id'), nullable=False)
 	status = Column(String(50), default = 'draft')
 	order_title = Column(String(255))
-	address = Column(String(255))
-	billing_address = Column(String(255))
-	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
 	total_budget = Column(Float, default = 0)
 	created_at = Column(DateTime, default = datetime.utcnow)
-	contact_name = Column(String(255), nullable = False, default=' ')
-	contact_email = Column(String(255), nullable = False, default=' ')
-	contact_phone = Column(String(255), nullable = False, default=' ')
 	created_by = Column(String(50))
 	updated_at = Column(DateTime)
 	updated_by = Column(String(50))
 
 	# Set relationship
-	user = relationship('User', back_populates='orders')
+	deal = relationship('Deal', back_populates='orders')
 	order_details = relationship('OrderDetails', back_populates='order', cascade='all, delete-orphan')
