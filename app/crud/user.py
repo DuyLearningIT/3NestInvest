@@ -8,7 +8,7 @@ from fastapi_mail import MessageSchema, MessageType, FastMail
 import uuid
 from pydantic import EmailStr
 
-def get_users(db: Session, admin_required : dict):
+async ef get_users(db: Session, admin_required : dict):
 	try:
 		return {
 			'mess' : 'Get all users successfully !',
@@ -21,7 +21,7 @@ def get_users(db: Session, admin_required : dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_user(db: Session, user_id : int):
+async def get_user(db: Session, user_id : int):
 	try:
 		user = db.query(User).filter(User.user_id == user_id).first()
 		if user is None:
@@ -40,7 +40,7 @@ def get_user(db: Session, user_id : int):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 	
-def create_user(db: Session, user: UserCreate, admin: dict):
+async def create_user(db: Session, user: UserCreate, admin: dict):
 	try:
 		check_email = db.query(User).filter(User.user_email == user.user_email).first()
 
@@ -107,7 +107,7 @@ async def login(db: Session, user: UserLogin):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def update_user(db: Session, user: UserUpdate):
+async def update_user(db: Session, user: UserUpdate):
 	try:
 		check = db.query(User).filter(User.user_id == user.user_id).first()
 		if check is None: 
@@ -140,7 +140,7 @@ def update_user(db: Session, user: UserUpdate):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def change_passowrd(db: Session, user: UserChangePassword):
+async def change_passowrd(db: Session, user: UserChangePassword):
 	try:
 		check = db.query(User).filter(User.user_id == user.user_id).first()
 		if check is None:
@@ -166,7 +166,7 @@ def change_passowrd(db: Session, user: UserChangePassword):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def delete_user (db: Session, user_id: int):
+async def delete_user (db: Session, user_id: int):
 	try:
 		check = db.query(User).filter(User.user_id == user_id).first()
 		if check is None:
@@ -186,7 +186,7 @@ def delete_user (db: Session, user_id: int):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_my_info(db: Session, current_user: dict):
+async def get_my_info(db: Session, current_user: dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
 		if user is None:
@@ -262,7 +262,7 @@ async def forgot_password(db: Session, email: EmailStr, phone: str):
         )
 
 # Admin required
-def get_users_by_role(db: Session, role: str):
+async def get_users_by_role(db: Session, role: str):
 	try:
 		users = db.query(User).filter(User.role == role).all()
 		return {

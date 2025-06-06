@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.schemas import DealCreate, DealUpdate, DealApprove
 from app.db import db_depend
 from app.crud import deal as deal_crud
-from app.utils import admin_required, high_level_required, get_current_user
+from app.utils import admin_required, high_level_required, get_current_user, get_info_from_tin
 
 router = APIRouter(
 	prefix = '/deals',
@@ -49,4 +49,9 @@ async def change_status_of_deal(db: db_depend, request: DealApprove, high_level 
 @router.get('/get-deals-by-user')
 async def get_deals_by_user(db: db_depend, current_user = Depends(get_current_user)):
 	response = await deal_crud.get_deals_by_user(db, current_user)
+	return response
+
+@router.get('/get-info-by-tin')
+async def get_info_by_tin(tin: str):
+	response = await get_info_from_tin(tin)
 	return response

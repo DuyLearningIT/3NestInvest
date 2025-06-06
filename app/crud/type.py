@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 
 # Admin required
-def create_type(db: Session, request : CRUDType):
+async def create_type(db: Session, request : CRUDType):
 	try:
 		check = db.query(Type).filter(Type.type_name == request.type_name).first()
 		if check:
@@ -38,7 +38,7 @@ def create_type(db: Session, request : CRUDType):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_types(db: Session):
+async def get_types(db: Session):
 	try:
 		return {
 			'mess': 'Get all types successfully !',
@@ -51,7 +51,7 @@ def get_types(db: Session):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_type(db : Session, type_id : int):
+async def get_type(db : Session, type_id : int):
 	try:
 		check = db.query(Type).filter(Type.type_id == type_id).first()
 		if check is None:
@@ -75,7 +75,7 @@ def get_type(db : Session, type_id : int):
 		)
 
 # Admin required
-def update_type(db: Session, request: UpdateType, admin : dict):
+async def update_type(db: Session, request: UpdateType, admin : dict):
 	try:
 		check = db.query(Type).filter(Type.type_id == request.type_id).first()
 		if check is None:
@@ -108,7 +108,7 @@ def update_type(db: Session, request: UpdateType, admin : dict):
 		)
 
 # Admin required
-def delete_type(db: Session, type_id : int):
+async def delete_type(db: Session, type_id : int):
 	try:
 		check = db.query(Type).filter(Type.type_id == type_id).first()
 		if check is None:

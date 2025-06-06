@@ -27,7 +27,6 @@ async def get_deal(db: Session, deal_id : int):
 				detail = 'Deal not found !',
 				status_code = status.HTTP_404_NOT_FOUND
 			)
-		
 		return {
 			'mess' : 'Get deal successfully !',
 			'data' : deal,
@@ -162,7 +161,7 @@ async def delete_deal(db: Session, deal_id : int, current_user: dict):
 		)
 
 # High-level required 
-def change_status_of_deal(db: Session, request : DealApprove):
+async def change_status_of_deal(db: Session, request : DealApprove):
 	try:
 		deal = db.query(Deal).filter(Deal.deal_id == request.deal_id).first()
 		if deal is None:

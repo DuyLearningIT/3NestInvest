@@ -68,3 +68,9 @@ async def get_orders_by_role(db: db_depend, role: str, admin= Depends(admin_requ
 async def get_orders_by_user(db: db_depend, current_user = Depends(get_current_user)):
 	response = await order_crud.get_orders_by_user(db, current_user)
 	return response
+
+# User required 
+@router.get('/get-orders-by-deal')
+async def get_orders_by_deal(db: db_depend, deal_id: int, current_user= Depends(get_current_user)):
+	respone = await order_crud.get_orders_by_deal(db, deal_id)
+	return response

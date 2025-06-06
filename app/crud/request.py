@@ -3,7 +3,7 @@ from app.models import UserRequest
 from app.schemas import CreateRequest, UpdateRequest
 from fastapi import HTTPException, status
 
-def create_request(db: Session, request : CreateRequest):
+async def create_request(db: Session, request : CreateRequest):
 	try:
 		new_request = UserRequest(
 			user_name = request.user_name,
@@ -25,7 +25,7 @@ def create_request(db: Session, request : CreateRequest):
 		)
 
 # Admin required
-def update_request(db: Session, request: UpdateRequest):
+async def update_request(db: Session, request: UpdateRequest):
 	try:
 		check = db.query(UserRequest).filter(UserRequest.request_id == request.request_id).first()
 		if check is None:
@@ -51,7 +51,7 @@ def update_request(db: Session, request: UpdateRequest):
 		)
 
 # Admin required
-def get_request(db: Session, request_id):
+async def get_request(db: Session, request_id):
 	try: 
 		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
 		if request is None:
@@ -71,7 +71,7 @@ def get_request(db: Session, request_id):
 		}
 
 # Admin required
-def get_requests(db: Session):
+async def get_requests(db: Session):
 	try:
 		return {
 			'mess': 'Get all requests successfully !',
@@ -85,7 +85,7 @@ def get_requests(db: Session):
 		)
 
 # Admin required
-def delete_request(db: Session, request_id:int):
+async def delete_request(db: Session, request_id:int):
 	try: 
 		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
 		if request is None:

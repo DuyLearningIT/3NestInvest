@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 
 # Admin required
-def create_product(db: Session, request : CreateProduct, admin: dict):
+async def create_product(db: Session, request : CreateProduct, admin: dict):
 	try:
 		pro = db.query(Product).filter(Product.product_name == request.product_name).first()
 		if pro:
@@ -57,7 +57,7 @@ def create_product(db: Session, request : CreateProduct, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_products(db : Session):
+async def get_products(db : Session):
 	try:
 		pros = db.query(Product).all()
 		products = []
@@ -91,7 +91,7 @@ def get_products(db : Session):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_product(db: Session, product_id : int):
+async def get_product(db: Session, product_id : int):
 	try:
 		pro = db.query(Product).filter(Product.product_id == product_id).first()
 		if pro is None:
@@ -137,7 +137,7 @@ def get_product(db: Session, product_id : int):
 		)
 	
 # Admin required
-def update_product(db: Session, request : UpdateProduct, admin: dict):
+async def update_product(db: Session, request : UpdateProduct, admin: dict):
 	try:
 		pro = db.query(Product).filter(Product.product_id == request.product_id).first()
 		if pro is None:
@@ -168,7 +168,7 @@ def update_product(db: Session, request : UpdateProduct, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_products_by_category(db: Session, category_id: int):
+async def get_products_by_category(db: Session, category_id: int):
 	try:
 		return {
 			'mess' : 'Get products by category successfully !',
@@ -191,7 +191,7 @@ def get_products_by_category(db: Session, category_id: int):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_products_by_type(db: Session, type_id: int):
+async def get_products_by_type(db: Session, type_id: int):
 	try:
 		# Check if needed, then -> Add (Added to determine type)
 		type_ = db.query(Type).filter(Type.type_id == type_id).first()
@@ -222,7 +222,7 @@ def get_products_by_type(db: Session, type_id: int):
 		)
 
 # Admin required
-def delete_product(db: Session, product_id : int):
+async def delete_product(db: Session, product_id : int):
 	try:
 		pro = db.query(Product).filter(Product.product_id == product_id).first()
 		if pro is None:
@@ -243,7 +243,7 @@ def delete_product(db: Session, product_id : int):
 		)
 
 # User required
-def get_products_by_role(db: Session, current_user: dict):
+async def get_products_by_role(db: Session, current_user: dict):
 	try:
 		pros = db.query(Product).filter(Product.product_role == current_user['role']).all()
 		products = []
@@ -277,7 +277,7 @@ def get_products_by_role(db: Session, current_user: dict):
 		)
 
 # Admin required
-def get_products_by_role_and_type(db: Session, role: str, type_id: int):
+async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 	try:
 		products = db.query(Product).filter(Product.product_role == role).all()
 		pros = []
@@ -318,7 +318,7 @@ def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 
 # User required
 # This function is used for user who log-in into our website and with their role
-def get_products_by_category_and_role(db: Session, category_id: int, current_user : dict):
+async def get_products_by_category_and_role(db: Session, category_id: int, current_user : dict):
 	try:
 		products = db.query(Product).filter(Product.product_role == current_user['role']).all()
 		pros = []

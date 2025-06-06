@@ -13,19 +13,19 @@ router = APIRouter(
 # Admin required
 @router.post('/create-user')
 async def create_user(request: UserCreate, db: db_depend, admin=Depends(admin_required)):
-	response = user_crud.create_user(db, request, admin)
+	response = await user_crud.create_user(db, request, admin)
 	return response
 
 # Admin required
 @router.get('/get-users')
 async def get_users(db: db_depend, admin= Depends(admin_required)):
-	response =  user_crud.get_users(db, admin)
+	response =  await user_crud.get_users(db, admin)
 	return response
 
 # User required
 @router.get('/get-user')
 async def get_user(db: db_depend, user_id : int, current_user= Depends(get_current_user)):
-	response = user_crud.get_user(db, user_id)
+	response = await user_crud.get_user(db, user_id)
 	return response
 
 @router.post('/login')
@@ -48,13 +48,13 @@ async def change_password(db: db_depend, user: UserChangePassword, current_user 
 # Admin required
 @router.delete('/delete-user')
 async def delete_user(db: db_depend, user_id : int, admin = Depends(admin_required)):
-	response = user_crud.delete_user(db, user_id)
+	response = await user_crud.delete_user(db, user_id)
 	return response
 
 # User required
 @router.get('/my-info')
 async def get_my_info(db: db_depend, current_user = Depends(get_current_user)):
-	response = user_crud.get_my_info(db, current_user)
+	response = await user_crud.get_my_info(db, current_user)
 	return response
 
 @router.post('/reset-password')
@@ -65,5 +65,5 @@ async def reset_password(db: db_depend, email: EmailStr, phone: str):
 # Admin required
 @router.get('/get-users-by-role')
 async def get_users_by_role(db: db_depend, role: str, admin = Depends(admin_required)):
-	response = user_crud.get_orders_by_role(db, role)
+	response = await user_crud.get_orders_by_role(db, role)
 	return response

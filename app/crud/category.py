@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException, status
 
 # Admin required
-def create_category(db: Session, request : CreateCategory, admin: dict):
+async def create_category(db: Session, request : CreateCategory, admin: dict):
 	try:
 		check = db.query(Category).filter(Category.category_name == request.category_name).first()
 		if check:
@@ -43,7 +43,7 @@ def create_category(db: Session, request : CreateCategory, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_categories(db: Session):
+async def get_categories(db: Session):
 	try:
 		cates = db.query(Category).all()
 		categories = []
@@ -68,7 +68,7 @@ def get_categories(db: Session):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def get_category(db: Session, category_id : int):
+async def get_category(db: Session, category_id : int):
 	try:
 		cate = db.query(Category).filter(Category.category_id == category_id).first()
 		if cate is None:
@@ -95,7 +95,7 @@ def get_category(db: Session, category_id : int):
 		)
 
 # Admin required
-def update_category(db: Session, request: UpdateCategory, admin: dict):
+async def update_category(db: Session, request: UpdateCategory, admin: dict):
 	try:
 		cate = db.query(Category).filter(Category.category_id == request.category_id).first()
 		if cate is None:
@@ -127,7 +127,7 @@ def update_category(db: Session, request: UpdateCategory, admin: dict):
 		)
 
 # Admin required
-def delete_category(db: Session, category_id: int, admin: dict):
+async def delete_category(db: Session, category_id: int, admin: dict):
 	try:
 		cate = db.query(Category).filter(Category.category_id == category_id).first()
 		if cate is None:
@@ -147,7 +147,7 @@ def delete_category(db: Session, category_id: int, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
  
-def get_categories_by_type(db: Session, type_id: int):
+async def get_categories_by_type(db: Session, type_id: int):
 	try:
 		return{
 			'mess' : 'Get categories by type successfully !',
