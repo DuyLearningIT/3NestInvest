@@ -34,3 +34,7 @@ class DealUpdate(BaseModel):
 	status: str | None = 'draft'
 	address : str | None = None
 	billing_address : str | None = None
+
+class DealApprove(BaseModel):
+	deal_id : int
+	status: str | None = 'draft'

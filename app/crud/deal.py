@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import Order, OrderDetails, User, Product, Deal
-from app.schemas import DealUpdate, DealCreate
+from app.schemas import DealUpdate, DealCreate, DealApprove
 from fastapi import Depends
 from datetime import datetime
 from fastapi import HTTPException, status
@@ -48,6 +48,12 @@ async def create_deal(db: Session, request: DealCreate, current_user : dict):
 				detail = 'User not found !',
 				status_code= status.HTTP_404_NOT_FOUND
 			)
+		check_deal = db.query(Deal).filter(Deal.tax_indentification_number == request.tax_indentification_number and Deal.status == 'approved').first()
+		if check_deal:
+			raise HTTPException(
+				detail = 'Deal has already existed',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
 		new_deal = Deal(
 			deal_type=request.deal_type,
 			description=request.description,
@@ -94,10 +100,13 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 				detail='Deal not found!',
 				status_code=status.HTTP_404_NOT_FOUND
 			)
-
+		if deal.user_id != user.user_id:
+			raise HTTPException(
+				detail = 'Cannot revise the order which is not your own !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
 		deal.deal_type = request.deal_type or deal.deal_type
 		deal.description = request.description or deal.description
-		deal.user_id = request.user_id or deal.user_id
 		deal.tax_indentification_number = request.tax_indentification_number or deal.tax_indentification_number
 		deal.customer_name = request.customer_name or deal.customer_name
 		deal.domain_name = request.domain_name or deal.domain_name
@@ -107,8 +116,8 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 		deal.status = request.status or deal.status
 		deal.address = request.address or deal.address
 		deal.billing_address = request.billing_address or deal.billing_address
-		updated_at = datetime.utcnow()
-		updated_by = user.user_name
+		deal.updated_at = datetime.utcnow()
+		deal.updated_by = user.user_name
         
 		db.commit()
 		db.refresh(deal)
@@ -121,8 +130,8 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 	except Exception as ex:
 		db.rollback()
 		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+			detail = f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
 # User required
@@ -153,15 +162,15 @@ async def delete_deal(db: Session, deal_id : int, current_user: dict):
 		)
 
 # High-level required 
-async def change_status_of_deal(db: Session, deal_id: int, status: str):
+def change_status_of_deal(db: Session, request : DealApprove):
 	try:
-		deal = db.query(Deal).filter(Deal.deal_id == deal_id).first()
+		deal = db.query(Deal).filter(Deal.deal_id == request.deal_id).first()
 		if deal is None:
 			raise HTTPExeption (
 				detail = 'Deal not found !',
 				status_code= status.HTTP_404_NOT_FOUND
 			)
-		deal.status = status or deal.status
+		deal.status = request.status or deal.status
 		db.commit()
 		db.refresh(deal)
 		return {
@@ -171,6 +180,26 @@ async def change_status_of_deal(db: Session, deal_id: int, status: str):
 		}
 	except Exception as ex:
 		db.rollback()
+		raise HTTPException(
+			detail = f'Something was wrong: {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+# User required
+async def get_deals_by_user(db: Session, current_user: dict):
+	try:
+		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
+		if user is None:
+			raise HTTPException(
+				detai = 'User not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
+		return {
+			'mess' : 'Get deals by user successfully !',
+			'status_code' : status.HTTP_200_OK,
+			'data' : db.query(Deal).filter(Deal.user_id == user.user_id).all()
+		}
+	except Exception as ex:
 		raise HTTPException(
 			detail = f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR

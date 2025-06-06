@@ -1,25 +1,36 @@
 from sqlalchemy.orm import Session
-from app.models import Order, OrderDetails, User, Product
-from app.schemas import OrderCreate, OrderUpdate
+from app.models import Order, OrderDetails, User, Product, Deal
+from app.schemas import OrderCreate, OrderUpdate, OrderApprove
 from fastapi import Depends
 from datetime import datetime
 from fastapi import HTTPException, status
 
 # User required
-def create_order(db: Session, order : OrderCreate, current_user: dict):
+async def create_order(db: Session, order : OrderCreate, current_user: dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
+		check_deal = db.query(Deal).filter(Deal.deal_id == order.deal_id).first()
 		if user is None:
 			raise HTTPException(
 				detail= 'User not found !',
 				status_code = status.HTTP_404_NOT_FOUND
 			)
-
+		if check_deal is None:
+			raise HTTPException(
+				detail= 'Deal not found !',
+				status_code = status.HTTP_404_NOT_FOUND
+			)
+		if check_deal.user_id != user.user_id:
+			raise HTTPException(
+				detail = 'Cannot add the order based on the deal which is not your own !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
+		
 		db_order = Order(
 			deal_id = order.deal_id,
 			order_title=order.order_title,
 			created_by=user.user_name,
-			status = order.status,
+			status = order.status
 		)
 		db.add(db_order)
 		db.commit()
@@ -75,13 +86,14 @@ def create_order(db: Session, order : OrderCreate, current_user: dict):
 		}
 
 	except Exception as ex:
+		db.rollback()
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
 # User required
-def get_order(db: Session, order_id : int):
+async def get_order(db: Session, order_id : int):
 	try:
 		order = db.query(Order).filter(Order.order_id == order_id).first()
 		if order is None:
@@ -100,7 +112,7 @@ def get_order(db: Session, order_id : int):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-def update_order(db: Session, request: OrderUpdate, current_user : dict):
+async def update_order(db: Session, request: OrderUpdate, current_user : dict):
 	try:
 		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
 		if user is None:
@@ -132,21 +144,22 @@ def update_order(db: Session, request: OrderUpdate, current_user : dict):
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
 	except Exception as ex:
+		db.rollback()
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-# Admin required: This allows admin and manager for approving or rejecting order which is submitted
-def change_status_of_order(db: Session, status: str, order_id : int):
+# High-level required: This allows admin and manager for approving or rejecting order which is submitted
+async def change_status_of_order(db: Session, request: OrderApprove):
 	try:
-		order = db.query(Order).filter(Order.order_id == order_id).first()
+		order = db.query(Order).filter(Order.order_id == request.order_id).first()
 		if order is None:
 			raise HTTPException(
 				detail= 'Order not found !',
 				status_code = status.HTTP_404_NOT_FOUND
 			)
-		order.status = status or order.status
+		order.status = request.status or order.status
 		db.commit()
 		db.refresh(order)
 		return {
@@ -156,13 +169,14 @@ def change_status_of_order(db: Session, status: str, order_id : int):
 		}
 
 	except Exception as ex:
+		db.rollback()
 		raise HTTPException(
 			detail=f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
 # User required 
-def get_order_details_by_order(db: Session, order_id : int):
+async def get_order_details_by_order(db: Session, order_id : int):
 	try:
 		od_details = db.query(OrderDetails).filter(OrderDetails.order_id == order_id).all()
 		order_details = []
@@ -190,12 +204,12 @@ def get_order_details_by_order(db: Session, order_id : int):
 		}
 	except Exception as ex:
 		raise HTTPException(
-			detail = f'Somethign was wrong: {ex}',
+			detail = f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
 # User required
-def delete_order(db: Session, order_id: int, current_user: dict):
+async def delete_order(db: Session, order_id: int, current_user: dict):
 	try:
 		order = db.query(Order).filter(Order.order_id == order_id).first()
 		if order is None:
@@ -214,6 +228,11 @@ def delete_order(db: Session, order_id: int, current_user: dict):
 				detail = 'Cannot remove order which is not your own !',
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
+		if order.status != 'draft':
+			raise HTTPException(
+				detail = 'The order is being processed ! Cannot remove !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
 		db.delete(order)
 		db.commit()
 		return {
@@ -221,6 +240,7 @@ def delete_order(db: Session, order_id: int, current_user: dict):
 			'status_code' : status.HTTP_204_NO_CONTENT
 		}
 	except Exception as ex:
+		db.rollback()
 		raise HTTPException(
 			detail = f'Something was wrong {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -239,6 +259,70 @@ async def get_orders_by_deal(db: Session, deal_id: int):
 			'mess' : 'Get orders by deal succesfuly !',
 			'status_code' : status.HTTP_200_OK,
 			'data': db.query(Order).filter(Order.deal_id == deal_id).all()
+		}
+	except Exception as ex:
+		raise HTTPException(
+			detail = f'Something was wrong {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+
+async def get_orders_by_user(db: Session, current_user: dict):
+	try:
+		deals = db.query(Deal).filter(Deal.user_id == current_user['user_id']).all()
+		ords = []
+		for deal in deals:
+			d = db.query(Deal).filter(Deal.deal_id == deal.deal_id).first()
+			if d is None:
+				raise HTTPException(
+					detail = 'Deal not found !',
+					status_code= status.HTTP_404_NOT_FOUND
+				)
+			obj = {
+				'deal_id' : d.deal_id,
+				'orders' : db.query(Order).filter(Order.deal_id == d.deal_id).all()
+			}
+			ords.append(obj)
+		return {
+			'mess' : 'Get orders by user successfully !',
+			'status_code' : status.HTTP_200_OK,
+			'data' : ords
+		}
+	except Excecption as ex:
+		raise HTTPException(
+			detail = f'Something was wrong {ex}',
+			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		)
+
+# High-level required
+async def get_orders(db: Session):
+	try:
+		orders = db.query(Order).filter(Order.status != 'draft').all()
+		ods = []
+		for order in orders:
+			deal = db.query(Deal).filter(Deal.deal_id == order.deal_id).first()
+			if deal is None:
+				raise HTTPException(
+					detail = 'Deal not found !',
+					status_code = status.HTTP_400_BAD_REQUEST
+				)
+			obj = {
+				'order_id' : order.order_id,
+				'deal_id' : order.deal_id,
+				'contact_name' : deal.contact_name,
+				'contact_phone' : deal.contact_phone,
+				'contact_email' : deal.contact_email,
+				'address' : deal.address,
+				'billing_address': deal.billing_address,
+				'order_title': order.order_title,
+				'total_budget' : order.total_budget,
+				'status' : order.status
+			}
+			ods.append(obj)
+		return {
+			'mess' : 'Get all orders successfully !',
+			'status_code': status.HTTP_200_OK,
+			'data' : ods
 		}
 	except Exception as ex:
 		raise HTTPException(
