@@ -1,14 +1,13 @@
-from sqlalchemy.orm import Session, load_only
+from sqlalchemy.orm import Session
 from app.models import User
 from app.schemas import UserCreate, UserLogin, UserUpdate, UserChangePassword
-from app.utils import hash_password, create_access_token, verify_password, conf, generate_random_password
+from app.utils import hash_password, create_access_token, verify_password, conf, generate_random_password, get_internal_server_error, get_user_or_404
 from datetime import datetime
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, MessageType, FastMail
-import uuid
 from pydantic import EmailStr
 
-async ef get_users(db: Session, admin_required : dict):
+async def get_users(db: Session, admin_required : dict):
 	try:
 		return {
 			'mess' : 'Get all users successfully !',
@@ -16,29 +15,18 @@ async ef get_users(db: Session, admin_required : dict):
 			'data' : db.query(User).all()
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_user(db: Session, user_id : int):
 	try:
-		user = db.query(User).filter(User.user_id == user_id).first()
-		if user is None:
-			raise HTTPException(
-				detail= 'User not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		user = get_user_or_404(db, user_id)
 		return {
 			'mess': 'Get user successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data' : user
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 	
 async def create_user(db: Session, user: UserCreate, admin: dict):
 	try:
@@ -74,10 +62,7 @@ async def create_user(db: Session, user: UserCreate, admin: dict):
 				}
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def login(db: Session, user: UserLogin):
 	try:
@@ -102,19 +87,11 @@ async def login(db: Session, user: UserLogin):
 			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role})
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def update_user(db: Session, user: UserUpdate):
 	try:
-		check = db.query(User).filter(User.user_id == user.user_id).first()
-		if check is None: 
-			raise HTTPException(
-			detail= 'User not found !',
-			status_code = status.HTTP_404_NOT_FOUND
-		)
+		check = get_user_or_404(db, user.user_id)
 		check.user_name = user.user_name or check.user_name
 		check.company_name = user.company_name or check.company_name
 		check.status = user.status or check.status
@@ -135,19 +112,11 @@ async def update_user(db: Session, user: UserUpdate):
 			}
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def change_passowrd(db: Session, user: UserChangePassword):
 	try:
-		check = db.query(User).filter(User.user_id == user.user_id).first()
-		if check is None:
-			raise HTTPException(
-				detail= 'User not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		check = get_user_or_404(db, user.user_id)
 		if not verify_password(user.old_password, check.hashed_password):
 			raise HTTPException(
 				detail= 'Email or password was wrong !',
@@ -161,19 +130,11 @@ async def change_passowrd(db: Session, user: UserChangePassword):
 			'status_code' : status.HTTP_200_OK
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail= f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def delete_user (db: Session, user_id: int):
 	try:
-		check = db.query(User).filter(User.user_id == user_id).first()
-		if check is None:
-			raise HTTPException(
-			detail= 'User not found !',
-			status_code = status.HTTP_404_NOT_FOUND
-		)
+		check = get_user_or_404(db, user_id)
 		db.delete(check)
 		db.commit()
 		return {
@@ -181,29 +142,18 @@ async def delete_user (db: Session, user_id: int):
 			'status_code': status.HTTP_204_NO_CONTENT
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_my_info(db: Session, current_user: dict):
 	try:
-		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-		if user is None:
-			raise HTTPException(
-			detail= 'User not found !',
-			status_code = status.HTTP_404_NOT_FOUND
-		)
+		user = get_user_or_404(db, current_user['user_id'])
 		return{
 			'mess' : 'Get user successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data' : user
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def forgot_password(db: Session, email: EmailStr, phone: str):
     try:
@@ -256,10 +206,7 @@ async def forgot_password(db: Session, email: EmailStr, phone: str):
 		}
 
     except Exception as ex:
-        raise HTTPException(
-            detail=f"Something went wrong: {ex}",
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return get_internal_server_error(ex)
 
 # Admin required
 async def get_users_by_role(db: Session, role: str):
@@ -271,7 +218,4 @@ async def get_users_by_role(db: Session, role: str):
 			'data' : users
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail = f'Something was wrong : {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)

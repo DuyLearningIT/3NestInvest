@@ -36,13 +36,13 @@ async def login(db: db_depend, request: UserLogin):
 # User required
 @router.post('/update-user')
 async def update_user(db: db_depend, request: UserUpdate, current_user = Depends(get_current_user)):
-	response = user_crud.update_user(db, request)
+	response = await user_crud.update_user(db, request)
 	return response
 
 # User required
 @router.post('/change-password')
 async def change_password(db: db_depend, user: UserChangePassword, current_user = Depends(get_current_user)):
-	response = user_crud.change_passowrd(db, user)
+	response = await user_crud.change_passowrd(db, user)
 	return response
 
 # Admin required

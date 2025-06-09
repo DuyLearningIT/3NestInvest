@@ -21,7 +21,7 @@ async def get_products(db: db_depend, product_id : int):
 
 @router.get('/get-products-by-category')
 async def get_products_by_category(db: db_depend, category_id : int):
-	response = product_crud.get_products_by_category(db, category_id)
+	response = await product_crud.get_products_by_category(db, category_id)
 	return response
 
 @router.get('/get-products-by-type')
@@ -44,7 +44,7 @@ async def update_product(db: db_depend, request: UpdateProduct, admin=Depends(ad
 # Admin required
 @router.delete('/delete-product')
 async def delete_product(db: db_depend, product_id : int, admin = Depends(admin_required)):
-	response = product_crud.delete_product(db, product_id)
+	response = await product_crud.delete_product(db, product_id)
 	return response
 
 # User required
@@ -56,7 +56,7 @@ async def get_products_by_role(db: db_depend, current_user = Depends(get_current
 # Admin required
 @router.get('/get-products-by-role-and-type')
 async def get_products_by_role_and_type(db: db_depend, role: str, type_id : int, admin = Depends(admin_required)):
-	response = product_crud.get_products_by_role_and_type(db, role, type_id)
+	response = await product_crud.get_products_by_role_and_type(db, role, type_id)
 	return response
 
 # User required

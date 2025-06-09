@@ -55,3 +55,9 @@ async def get_deals_by_user(db: db_depend, current_user = Depends(get_current_us
 async def get_info_by_tin(tin: str):
 	response = await get_info_from_tin(tin)
 	return response
+
+# Admin required
+@router.get('/get-deals-by-role')
+async def get_deals_by_role(db: db_depend, role: str, admin = Depends(admin_required)):
+	response = await deal_crud.get_deals_by_role(db, role)
+	return response

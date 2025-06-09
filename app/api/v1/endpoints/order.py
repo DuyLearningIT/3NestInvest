@@ -22,9 +22,9 @@ async def get_orders(db: db_depend, high_level= Depends(high_level_required)):
 	return response
 
 # User required
-@router.get('/get-order-by-user')
-async def get_order_by_user(db: db_depend, current_user = Depends(get_current_user)):
-	response = await order_crud.get_order_by_user(db, current_user)
+@router.get('/get-orders-by-user')
+async def get_orders_by_user(db: db_depend, current_user = Depends(get_current_user)):
+	response = await order_crud.get_orders_by_user(db, current_user)
 	return response
 
 # User required
@@ -72,5 +72,5 @@ async def get_orders_by_user(db: db_depend, current_user = Depends(get_current_u
 # User required 
 @router.get('/get-orders-by-deal')
 async def get_orders_by_deal(db: db_depend, deal_id: int, current_user= Depends(get_current_user)):
-	respone = await order_crud.get_orders_by_deal(db, deal_id)
+	response = await order_crud.get_orders_by_deal(db, deal_id)
 	return response

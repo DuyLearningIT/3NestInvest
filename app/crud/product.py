@@ -3,6 +3,7 @@ from app.models import Product, Category, Type
 from app.schemas import CreateProduct, UpdateProduct
 from datetime import datetime
 from fastapi import HTTPException, status
+from app.utils import get_internal_server_error, get_type_or_404, get_category_or_404
 
 # Admin required
 async def create_product(db: Session, request : CreateProduct, admin: dict):
@@ -13,12 +14,7 @@ async def create_product(db: Session, request : CreateProduct, admin: dict):
 				detail= 'Product has already existed !',
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
-		cate = db.query(Category).filter(Category.category_id == request.category_id).first()
-		if cate is None:
-			raise HTTPException(
-				detail= 'Category not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		cate = get_category_or_404(db, request.category_id)
 		new_pro = Product(
 			product_name = request.product_name,
 			description = request.description,
@@ -52,10 +48,7 @@ async def create_product(db: Session, request : CreateProduct, admin: dict):
 			}
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_products(db : Session):
 	try:
@@ -64,6 +57,8 @@ async def get_products(db : Session):
 		for pro in pros:
 			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
 			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+			if pro.status == 'inactive': # Hide all inactive product
+				continue
 			obj = {
 				'product_id' : pro.product_id,
 				'product_name' : pro.product_name,
@@ -86,31 +81,13 @@ async def get_products(db : Session):
 			'data' : products
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_product(db: Session, product_id : int):
 	try:
-		pro = db.query(Product).filter(Product.product_id == product_id).first()
-		if pro is None:
-			raise HTTPException(
-				detail= 'product not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
-		cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
-		if cate is None:
-			raise HTTPException(
-				detail= 'Category not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
-		type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
-		if type_ is None:
-			raise HTTPException(
-				detail= 'Type not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		pro = get_product_or_404(db, product_id)
+		cate = get_category_or_404(db, pro.category_id)
+		type_ = get_type_or_404(db, cate.type_id)
 		return {
 			'mess' : 'Get product successfully !',
 			'status_code' : status.HTTP_201_CREATED,
@@ -131,20 +108,12 @@ async def get_product(db: Session, product_id : int):
 			}
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 	
 # Admin required
 async def update_product(db: Session, request : UpdateProduct, admin: dict):
 	try:
-		pro = db.query(Product).filter(Product.product_id == request.product_id).first()
-		if pro is None:
-			raise HTTPException(
-				detail= 'Product not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		pro = get_product_or_404(request.product_id)
 		pro.product_name = request.product_name or pro.product_name
 		pro.category_id = request.category_id or pro.category_id
 		pro.description = request.description or pro.description
@@ -163,10 +132,7 @@ async def update_product(db: Session, request : UpdateProduct, admin: dict):
 			'status_code' : status.HTTP_200_OK
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_products_by_category(db: Session, category_id: int):
 	try:
@@ -183,28 +149,22 @@ async def get_products_by_category(db: Session, category_id: int):
 					Product.maximum_discount,
 					Product.maximum_discount_price,
 					Product.channel_cost
-				)).filter(Product.category_id == category_id).all()
+				)).filter(Product.category_id == category_id, Product.status =='active').all()
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 async def get_products_by_type(db: Session, type_id: int):
 	try:
 		# Check if needed, then -> Add (Added to determine type)
-		type_ = db.query(Type).filter(Type.type_id == type_id).first()
-		if type_ is None:
-			raise HTTPException(
-				detail = 'Type not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		type_ = get_type_or_404(db, type_id)
 		cates = db.query(Category).filter(Category.type_id == type_id).all()
 		pros = []
 		for cate in cates:
 			products = db.query(Product).filter(Product.category_id == cate.category_id).all()
 			for pro in products:
+				if pro.status =='inactive':
+					continue
 				obj = {
 					'product' : pro,
 					'category_name': cate.category_name
@@ -216,20 +176,12 @@ async def get_products_by_type(db: Session, type_id: int):
 			'data' : pros
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # Admin required
 async def delete_product(db: Session, product_id : int):
 	try:
-		pro = db.query(Product).filter(Product.product_id == product_id).first()
-		if pro is None:
-			raise HTTPException(
-				detail= 'Product not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		pro = get_product_or_404(db, product_id)
 		db.delete(pro)
 		db.commit()
 		return {
@@ -237,10 +189,7 @@ async def delete_product(db: Session, product_id : int):
 			'status_code' : status.HTTP_204_NO_CONTENT
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 async def get_products_by_role(db: Session, current_user: dict):
@@ -271,10 +220,7 @@ async def get_products_by_role(db: Session, current_user: dict):
 			'data' : products
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # Admin required
 async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
@@ -282,13 +228,9 @@ async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 		products = db.query(Product).filter(Product.product_role == role).all()
 		pros = []
 		for pro in products:
-			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
-			# Can determine whether category is None or not (checked)
-			if cate is None:
-				raise HTTPException(
-					detail = 'Category not found !',
-					status_code = status.HTTP_404_NOT_FOUND
-				)
+			cate = get_category_or_404(db, pro.category_id)
+			if pro.status == 'inactive':
+				continue
 			if cate.type_id == type_id:
 				obj = {
 					'product_id' : pro.product_id,
@@ -311,10 +253,7 @@ async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 			'data': pros
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 # This function is used for user who log-in into our website and with their role
@@ -323,12 +262,9 @@ async def get_products_by_category_and_role(db: Session, category_id: int, curre
 		products = db.query(Product).filter(Product.product_role == current_user['role']).all()
 		pros = []
 		for pro in products:
-			cate = db.query(Category).filter(Category.category_id == category_id).first()
-			if cate is None:
-				raise HTTPException (
-					detail = 'Category not found !',
-					status_code = status.HTTP_404_NOT_FOUND
-				)
+			cate = get_category_or_404(db, category_id)
+			if pro.status == 'inactive':
+				continue
 			if pro.category_id == category_id:
 				obj = {
 					'product_id' : pro.product_id,
@@ -351,7 +287,4 @@ async def get_products_by_category_and_role(db: Session, category_id: int, curre
 			'data' : pros
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)

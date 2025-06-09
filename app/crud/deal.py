@@ -4,13 +4,14 @@ from app.schemas import DealUpdate, DealCreate, DealApprove
 from fastapi import Depends
 from datetime import datetime
 from fastapi import HTTPException, status
+from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404
 
 # High-level required
 async def get_deals(db: Session):
 	try:
 		return {
 			'mess' : 'Get all deals successfully !',
-			'data' : db.query(Deal).all(),
+			'data' : db.query(Deal).filter(Deal.status != 'draft').all(),
 			'status_code' : status.HTTP_200_OK
 		}
 	except Exception as ex:
@@ -21,33 +22,24 @@ async def get_deals(db: Session):
 
 async def get_deal(db: Session, deal_id : int):
 	try:
-		deal = db.query(Deal).filter(Deal.deal_id == deal_id).first()
-		if deal is None:
-			raise HTTPException(
-				detail = 'Deal not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		deal = get_deal_or_404(db, deal_id)
+		user = get_user_or_404(db, deal.user_id)
 		return {
 			'mess' : 'Get deal successfully !',
-			'data' : deal,
+			'data' : {
+				'deal' : deal,
+				'role' : user.role
+			},
 			'status_code' : status.HTTP_200_OK
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 async def create_deal(db: Session, request: DealCreate, current_user : dict):
 	try:
-		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-		if user is None:
-			raise HTTPException(
-				detail = 'User not found !',
-				status_code= status.HTTP_404_NOT_FOUND
-			)
-		check_deal = db.query(Deal).filter(Deal.tax_indentification_number == request.tax_indentification_number and Deal.status == 'approved').first()
+		user = get_user_or_404(db, current_user['user_id'])
+		check_deal = db.query(Deal).filter(Deal.tax_indentification_number == request.tax_indentification_number, Deal.status == 'approved').first()
 		if check_deal:
 			raise HTTPException(
 				detail = 'Deal has already existed',
@@ -78,27 +70,14 @@ async def create_deal(db: Session, request: DealCreate, current_user : dict):
 		}
 	except Exception as ex:
 		db.rollback()
-		raise HTTPException (
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 	try:
-		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-		if user is None:
-			raise HTTPException(
-				detail='User not found!',
-				status_code=status.HTTP_404_NOT_FOUND
-			)
+		user = get_user_or_404(db, current_user['user_id'])
+		deal = get_deal_or_404(db, request.deal_id)
 
-		deal = db.query(Deal).filter(Deal.deal_id == request.deal_id).first()
-		if deal is None:
-			raise HTTPException(
-				detail='Deal not found!',
-				status_code=status.HTTP_404_NOT_FOUND
-			)
 		if deal.user_id != user.user_id:
 			raise HTTPException(
 				detail = 'Cannot revise the order which is not your own !',
@@ -128,20 +107,12 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 
 	except Exception as ex:
 		db.rollback()
-		raise HTTPException(
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 async def delete_deal(db: Session, deal_id : int, current_user: dict):
 	try:
-		deal = db.query(Deal).filter(Deal.deal_id == deal_id).first()
-		if deal is None:
-			raise HTTPExeption (
-				detail = 'Deal not found !',
-				status_code= status.HTTP_404_NOT_FOUND
-			)
+		deal = get_deal_or_404(db, deal_id)
 		if deal.user_id != current_user['user_id']:
 			raise HTTPException(
 				detail = 'Cannot remove deal which is not your own !',
@@ -155,20 +126,12 @@ async def delete_deal(db: Session, deal_id : int, current_user: dict):
 		}
 	except Exception as ex:
 		db.rollback()
-		raise HTTPException(
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # High-level required 
 async def change_status_of_deal(db: Session, request : DealApprove):
 	try:
-		deal = db.query(Deal).filter(Deal.deal_id == request.deal_id).first()
-		if deal is None:
-			raise HTTPExeption (
-				detail = 'Deal not found !',
-				status_code= status.HTTP_404_NOT_FOUND
-			)
+		deal = get_deal_or_404(db, request.deal_id)
 		deal.status = request.status or deal.status
 		db.commit()
 		db.refresh(deal)
@@ -179,20 +142,12 @@ async def change_status_of_deal(db: Session, request : DealApprove):
 		}
 	except Exception as ex:
 		db.rollback()
-		raise HTTPException(
-			detail = f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # User required
 async def get_deals_by_user(db: Session, current_user: dict):
 	try:
-		user = db.query(User).filter(User.user_id == current_user['user_id']).first()
-		if user is None:
-			raise HTTPException(
-				detai = 'User not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		user = get_user_or_404(db, current_user['user_id'])
 		return {
 			'mess' : 'Get deals by user successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -203,3 +158,20 @@ async def get_deals_by_user(db: Session, current_user: dict):
 			detail = f'Something was wrong: {ex}',
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
+	
+# Admin required
+async def get_deals_by_role(db: Session, role: str):
+	try:
+		deals = db.query(Deal).all()
+		ds = []
+		for deal in deals:
+			user = get_user_or_404(db, deal.user_id)
+			if user.role == role:
+				ds.append(deal)
+		return {
+			'mess': 'Get deals by role successfully !',
+			'status_code' : status.HTTP_200_OK,
+			'data' : ds
+		}
+	except Exception as ex:
+		return get_internal_server_error(ex)

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import UserRequest
 from app.schemas import CreateRequest, UpdateRequest
 from fastapi import HTTPException, status
+from app.utils import get_internal_server_error, get_request_or_404
 
 async def create_request(db: Session, request : CreateRequest):
 	try:
@@ -19,20 +20,12 @@ async def create_request(db: Session, request : CreateRequest):
 			'status_code' : status.HTTP_201_CREATED,
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # Admin required
 async def update_request(db: Session, request: UpdateRequest):
 	try:
-		check = db.query(UserRequest).filter(UserRequest.request_id == request.request_id).first()
-		if check is None:
-			raise HTTPException(
-				detail= 'Request not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		check = get_request_or_404(db, request.request_id)
 		check.user_name = request.user_name or check.user_name
 		check.user_email = request.user_email or check.user_email
 		check.company_name = request.company_name or check.company_name
@@ -45,20 +38,12 @@ async def update_request(db: Session, request: UpdateRequest):
 			'status_code' : status.HTTP_200_OK
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # Admin required
 async def get_request(db: Session, request_id):
 	try: 
-		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
-		if request is None:
-			raise HTTPException(
-				detail= 'Request not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		request = get_request_or_404(db, request_id)
 		return {
 			'mess' : 'Get request successfully !',
 			'status_code': status.HTTP_200_OK,
@@ -79,20 +64,12 @@ async def get_requests(db: Session):
 			'data' : db.query(UserRequest).all()
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
 
 # Admin required
 async def delete_request(db: Session, request_id:int):
 	try: 
-		request = db.query(UserRequest).filter(UserRequest.request_id == request_id).first()
-		if request is None:
-			raise HTTPException(
-				detail= 'Request not found !',
-				status_code = status.HTTP_404_NOT_FOUND
-			)
+		request = get_request_or_404(db, request_id)
 		db.delete(request)
 		db.commit()
 		return {
@@ -100,7 +77,4 @@ async def delete_request(db: Session, request_id:int):
 			'status_code': status.HTTP_204_NO_CONTENT
 		}
 	except Exception as ex:
-		raise HTTPException(
-			detail=f'Something was wrong: {ex}',
-			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-		)
+		return get_internal_server_error(ex)
