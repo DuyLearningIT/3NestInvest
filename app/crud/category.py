@@ -14,7 +14,7 @@ async def create_category(db: Session, request : CreateCategory, admin: dict):
 				detail='Category has already existed !',
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
-		check_type = get_type_or_404(db. request.type_id)
+		check_type = get_type_or_404(db, request.type_id)
 		new_cat = Category(
 			category_name = request.category_name,
 			type_id = request.type_id,
