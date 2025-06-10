@@ -117,6 +117,7 @@ async def change_status_of_order(db: Session, request: OrderApprove):
 	try:
 		order = get_order_or_404(db, request.order_id)
 		order.status = request.status or order.status
+		order.reason = request.reason or order.reason
 		db.commit()
 		db.refresh(order)
 		return {

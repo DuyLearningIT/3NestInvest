@@ -17,6 +17,7 @@ class Deal(Base):
 	contact_name = Column(String(255), nullable = False, default='')
 	contact_email = Column(String(255), nullable = False, default='')
 	contact_phone = Column(String(255), nullable = False, default='')
+	reason = Column(String(255))
 	address = Column(String(255))
 	billing_address = Column(String(255))
 	created_at = Column(DateTime, default = datetime.utcnow)

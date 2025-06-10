@@ -1,12 +1,6 @@
 from pydantic import BaseModel
 from typing import List 
 
-class OrderCreate(BaseModel):
-	order_title : str | None = None
-	deal_id: int
-	status : str | None = 'draft'
-	total_budget : float 
-
 class DealCreate(BaseModel):
 	deal_type : str
 	description : str | None = None
@@ -38,3 +32,4 @@ class DealUpdate(BaseModel):
 class DealApprove(BaseModel):
 	deal_id : int
 	status: str | None = 'draft'
+	reason : str | None = None

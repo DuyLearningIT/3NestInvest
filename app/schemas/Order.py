@@ -12,6 +12,7 @@ class OrderCreate(BaseModel):
 	order_title : str
 	status: str | None = 'draft'
 	details: List[OrderDetailCreate]
+	description: str | None = None
 
 class OrderUpdate(BaseModel):
 	order_id : int
@@ -22,3 +23,4 @@ class OrderUpdate(BaseModel):
 class OrderApprove(BaseModel):
 	order_id : int
 	status: str | None = 'draft'
+	reason : str | None = None

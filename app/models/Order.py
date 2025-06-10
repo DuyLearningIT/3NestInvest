@@ -10,6 +10,8 @@ class Order(Base):
 	deal_id = Column(Integer, ForeignKey('tb_deal.deal_id'), nullable=False)
 	status = Column(String(50), default = 'draft')
 	order_title = Column(String(255))
+	description = Column(String(255))
+	reason = Column(String(255))
 	total_budget = Column(Float, default = 0)
 	created_at = Column(DateTime, default = datetime.utcnow)
 	created_by = Column(String(50))

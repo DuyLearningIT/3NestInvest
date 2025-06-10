@@ -133,6 +133,7 @@ async def change_status_of_deal(db: Session, request : DealApprove):
 	try:
 		deal = get_deal_or_404(db, request.deal_id)
 		deal.status = request.status or deal.status
+		deal.reason = request.reason or deal.reason
 		db.commit()
 		db.refresh(deal)
 		return {
