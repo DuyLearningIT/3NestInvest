@@ -13,7 +13,7 @@ router = APIRouter(
 # Admin required
 @router.post('/create-user')
 async def create_user(request: UserCreate, db: db_depend, admin=Depends(admin_required)):
-	response = await user_crud.create_user(db, request, admin)
+	response = await user_crud.create_user(db, request)
 	return response
 
 # Admin required

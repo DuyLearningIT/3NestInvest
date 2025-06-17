@@ -5,3 +5,5 @@ from .product import *
 from .order import *
 from .request import *
 from .deal import *
+from .permission_type import *
+from .permission import *

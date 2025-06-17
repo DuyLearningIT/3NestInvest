@@ -6,3 +6,8 @@ from .OrderDetails import OrderDetails
 from .Type import Type
 from .UserRequest import UserRequest
 from .Deal import Deal
+from .Role import Role
+from .Permission import Permission
+from .PermissionType import PermissionType
+from .ActivityLog import ActivityLog
+from .RolePermission import RolePermission

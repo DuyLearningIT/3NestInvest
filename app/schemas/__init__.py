@@ -6,3 +6,5 @@ from .UserRequest import CreateRequest, UpdateRequest
 from .Order import OrderDetailCreate, OrderCreate, OrderUpdate, OrderApprove
 from .TokenData import TokenData
 from .Deal import DealCreate, DealUpdate, DealApprove
+from .PermissionType import PermissionTypeCreate, PermissionTypeUpdate
+from .Permission import PermissionCreate, PermissionUpdate

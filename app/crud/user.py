@@ -28,7 +28,7 @@ async def get_user(db: Session, user_id : int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 	
-async def create_user(db: Session, user: UserCreate, admin: dict):
+async def create_user(db: Session, user: UserCreate):
 	try:
 		check_email = db.query(User).filter(User.user_email == user.user_email).first()
 
@@ -59,7 +59,7 @@ async def create_user(db: Session, user: UserCreate, admin: dict):
 				'company_name' : db_user.company_name,
 				'role' : db_user.role,
 				'user_email' : db_user.user_email
-				}
+			}
 		}
 	except Exception as ex:
 		return get_internal_server_error(ex)

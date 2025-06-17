@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models import User, Deal, Category, Type, Order, UserRequest, Product
+from app.models import User, Deal, Category, Type, Order, UserRequest, Product, PermissionType, Permission
 
 def get_internal_server_error(ex):
 	raise HTTPException(
@@ -70,3 +70,21 @@ def get_request_or_404(db: Session, request_id : int) -> UserRequest:
 			status_code = status.HTTP_404_NOT_FOUND
 		)
 	return request
+
+def get_permission_type_or_404(db: Session, request_id : int) -> PermissionType:
+	permission_type = db.query(PermissionType).filter(PermissionType.permission_type_id == request_id).first()
+	if not permission_type:
+		raise HTTPException(
+			detail = 'PermissionType not found !',
+			status_code = status.HTTP_404_NOT_FOUND
+		)
+	return permission_type
+
+def get_permission_or_404(db: Session, request_id: int) -> Permission:
+	permission = db.query(Permission).filter(Permission.permission_id == request_id).fisrt()
+	if not permission:
+		raise HTTPException(
+			detail = 'Permission not found !',
+			status_code = status.HTTP_404_NOT_FOUND
+		)
+	return permission

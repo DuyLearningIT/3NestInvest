@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session, load_only
+from sqlalchemy.orm import Session, load_only, joinedload
 from app.schemas import CreateCategory, UpdateCategory
 from app.models import Category, Type
 from datetime import datetime
@@ -37,26 +37,32 @@ async def create_category(db: Session, request : CreateCategory, admin: dict):
 		return get_internal_server_error(ex)
 
 async def get_categories(db: Session):
-	try:
-		cates = db.query(Category).all()
-		categories = []
-		for cate in cates:
-			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
-			obj = {
-				'category_id' : cate.category_id,
-				'category_name' : cate.category_name,
-				'description' : cate.description,
-				'type_name' : type_.type_name
-			}
-			categories.append(obj)
-
-		return {
-			'mess' : 'Get all categories successfully !',
-			'status_code' : status.HTTP_200_OK,
-			'data' : categories
-		}
-	except Exception as ex:
-		return get_internal_server_error(ex)
+    try:
+        results = (
+            db.query(Category, Type)
+            .join(Type, Category.type_id == Type.type_id)
+            .all()
+        )
+        categories = []
+        for cate, type_ in results:
+            obj = {
+                'category_id': cate.category_id,
+                'category_name': cate.category_name,
+                'description': cate.description,
+                'type_name': type_.type_name
+            }
+            categories.append(obj)
+        return {
+            'mess': 'Get all categories successfully!',
+            'status_code': status.HTTP_200_OK,
+            'data': categories
+        }
+    except Exception as e:
+        return {
+            'mess': f'Error: {str(e)}',
+            'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
+            'data': []
+        }
 
 async def get_category(db: Session, category_id : int):
 	try:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
@@ -11,7 +11,7 @@ class User(Base):
 	user_email = Column(String(255), unique=True)
 	hashed_password = Column(String(255), nullable=False)
 	company_name = Column(String(255))
-	role = Column(String(10), nullable=False)
+	role_id = Column(Integer, ForeignKey('tb_role.role_id'), nullable=False)
 	status = Column(Boolean, default=True)
 	phone = Column(String(10))
 	created_at = Column(DateTime, default = datetime.utcnow)
@@ -21,3 +21,5 @@ class User(Base):
 	
 	# set relationship
 	deals = relationship('Deal', back_populates='user', cascade="all, delete-orphan" )
+	activity_logs = relationship('ActivityLog', back_populates='user', cascade='all, delete-orphan')
+	role = relationship('Role', back_populates='users')
