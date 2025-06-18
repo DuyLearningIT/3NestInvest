@@ -7,7 +7,7 @@ class Permission(Base):
 	__tablename__ = 'tb_permission'
 
 	permission_id = Column(Integer, primary_key = True, index = True)
-	permission_name = Column(String(100), unique = True, nullable = False)
+	permission_name = Column(String(100), nullable = False)
 	description = Column(String(255))
 	permission_type_id = Column(Integer, ForeignKey('tb_permission_type.permission_type_id'), nullable=False)
 	created_at = Column(DateTime, default = datetime.utcnow)

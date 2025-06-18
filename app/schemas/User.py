@@ -5,7 +5,7 @@ class UserCreate(BaseModel):
 	user_email: str
 	company_name : str
 	password : str
-	role : str
+	role_id : int
 
 class UserLogin(BaseModel):
 	user_email: str

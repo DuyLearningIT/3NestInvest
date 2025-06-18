@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import User
+from app.models import User, Role
 from app.schemas import UserCreate, UserLogin, UserUpdate, UserChangePassword
 from app.utils import hash_password, create_access_token, verify_password, conf, generate_random_password, get_internal_server_error, get_user_or_404
 from datetime import datetime
@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, MessageType, FastMail
 from pydantic import EmailStr
 
-async def get_users(db: Session, admin_required : dict):
+async def get_users(db: Session):
 	try:
 		return {
 			'mess' : 'Get all users successfully !',
@@ -44,7 +44,7 @@ async def create_user(db: Session, user: UserCreate):
 			user_name = user.user_name, 
 			user_email = user.user_email,
 			hashed_password = hashed_pw,
-			role = user.role,
+			role_id = user.role_id,
 			company_name = user.company_name
 		)
 		db.add(db_user)
@@ -57,7 +57,7 @@ async def create_user(db: Session, user: UserCreate):
 				'user_id' : db_user.user_id,
 				'user_name' : db_user.user_name,
 				'company_name' : db_user.company_name,
-				'role' : db_user.role,
+				'role_id' : db_user.role_id,
 				'user_email' : db_user.user_email
 			}
 		}
@@ -77,14 +77,15 @@ async def login(db: Session, user: UserLogin):
 				detail= 'Email or password was wrong !',
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
-		return{
+		role = db.query(Role).filter(Role.role_id== check.role_id).first()
+		return {
 			'mess' : 'Login successfully !',
 			'status_code': status.HTTP_200_OK,
 			'data' : { 
 				'role' : check.role,
 				'user_name' : check.user_name
 			},
-			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : check.role})
+			'access_token' : create_access_token({'user_id' : check.user_id, 'user_name': check.user_name, 'user_email' : check.user_email, 'role' : role.role_name})
 		}
 	except Exception as ex:
 		return get_internal_server_error(ex)
@@ -209,9 +210,9 @@ async def forgot_password(db: Session, email: EmailStr, phone: str):
         return get_internal_server_error(ex)
 
 # Admin required
-async def get_users_by_role(db: Session, role: str):
+async def get_users_by_role(db: Session, role_id: int):
 	try:
-		users = db.query(User).filter(User.role == role).all()
+		users = db.query(User).filter(User.role_id == role_id).all()
 		return {
 			'mess': 'Get users by role successfully !',
 			'status_code': 200,

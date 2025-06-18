@@ -9,15 +9,15 @@ router = APIRouter(
 	tags=['Permissions']
 )
 
-@router.post('/create-permission')
-async def create_permission(db: db_depend, request: PermissionCreate):
-	response = await permission_crud.create_permission(db, request)
-	return response 
+# @router.post('/create-permission')
+# async def create_permission(db: db_depend, request: PermissionCreate):
+# 	response = await permission_crud.create_permission(db, request)
+# 	return response
 
-@router.post('/update-permission')
-async def update_permission(db: db_depend, request: PermisisonUpdate):
-	response = await permission_crud.update_permission(db, request)
-	return response
+# @router.post('/update-permission')
+# async def update_permission(db: db_depend, request: PermissionUpdate):
+# 	response = await permission_crud.update_permission(db, request)
+# 	return response
 
 @router.get('/get-permission')
 async def get_permission(db: db_depend, request_id):
@@ -29,7 +29,12 @@ async def get_permissions(db: db_depend):
 	response = await permission_crud.get_permissions(db)
 	return response 
 
-@router.delete('/delete-permission')
-async def delete_permission(db: db_depend, request_id):
-	response = await permission_crud.delete_permission(db, request_id)
-	return repsonse 
+@router.get('/get-permissions-by-type')
+async def get_permissions_by_type(db: db_depend, request_id):
+	response = await permission_crud.get_permissions_by_type(db, request_id)
+	return response 
+
+# @router.delete('/delete-permission')
+# async def delete_permission(db: db_depend, request_id):
+# 	response = await permission_crud.delete_permission(db, request_id)
+# 	return repsonse 

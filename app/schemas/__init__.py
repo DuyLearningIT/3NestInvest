@@ -8,3 +8,4 @@ from .TokenData import TokenData
 from .Deal import DealCreate, DealUpdate, DealApprove
 from .PermissionType import PermissionTypeCreate, PermissionTypeUpdate
 from .Permission import PermissionCreate, PermissionUpdate
+from .Role import RoleCreate, RoleUpdate
