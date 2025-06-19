@@ -2,12 +2,19 @@ from sqlalchemy.orm import Session, load_only, joinedload
 from app.models import Product, Category, Type
 from app.schemas import CreateProduct, UpdateProduct
 from datetime import datetime
-from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_type_or_404, get_category_or_404
+from fastapi import HTTPException, status, Request
+from app.utils import get_internal_server_error, get_type_or_404, get_category_or_404, log_activity, get_product_or_404
+from app.utils.permission_checking import check_permission
 
 # Admin required
-async def create_product(db: Session, request : CreateProduct, admin: dict):
+async def create_product(db: Session, request : CreateProduct, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		pro = db.query(Product).filter(Product.product_name == request.product_name).first()
 		if pro:
 			raise HTTPException(
@@ -24,11 +31,18 @@ async def create_product(db: Session, request : CreateProduct, admin: dict):
 			category_id = request.category_id,
 			product_role = request.product_role,
 			channel_cost = request.channel_cost,
-			created_by = admin['user_name']
+			created_by = current_user['user_name']
 		)
 		db.add(new_pro)
 		db.commit()
 		db.refresh(new_pro)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Create product",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Create product successfully !',
 			'status_code' : status.HTTP_201_CREATED,
@@ -50,7 +64,7 @@ async def create_product(db: Session, request : CreateProduct, admin: dict):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_products(db : Session):
+async def get_products(db : Session, logRequest: Request, current_user: dict):
 	try:
 		pros = db.query(Product).all()
 		products = []
@@ -75,6 +89,13 @@ async def get_products(db : Session):
 				'status' : pro.status
 			}
 			products.append(obj)
+			log_activity(
+				db=db,
+				request= logRequest,
+				user_id= current_user['user_id'],
+				description= "Get all products",
+				target_type= "Product"
+			)
 		return {
 			'mess' : 'Get all products successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -83,11 +104,18 @@ async def get_products(db : Session):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_product(db: Session, product_id : int):
+async def get_product(db: Session, product_id : int, logRequest: Request, current_user: dict):
 	try:
 		pro = get_product_or_404(db, product_id)
 		cate = get_category_or_404(db, pro.category_id)
 		type_ = get_type_or_404(db, cate.type_id)
+		log_activity(
+				db=db,
+				request= logRequest,
+				user_id= current_user['user_id'],
+				description= "Get product by id",
+				target_type= "Product"
+		)
 		return {
 			'mess' : 'Get product successfully !',
 			'status_code' : status.HTTP_201_CREATED,
@@ -111,9 +139,21 @@ async def get_product(db: Session, product_id : int):
 		return get_internal_server_error(ex)
 	
 # Admin required
-async def update_product(db: Session, request : UpdateProduct, admin: dict):
+async def update_product(db: Session, request : UpdateProduct, logRequest: Request, current_user: dict):
 	try:
-		pro = get_product_or_404(request.product_id)
+		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
+		permission = await check_permission(db, 'manage', 'user', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
+		pro = get_product_or_404(db, request.product_id)
 		pro.product_name = request.product_name or pro.product_name
 		pro.category_id = request.category_id or pro.category_id
 		pro.description = request.description or pro.description
@@ -124,9 +164,16 @@ async def update_product(db: Session, request : UpdateProduct, admin: dict):
 		pro.channel_cost  = request.channel_cost or pro.channel_cost
 		pro.status = request.status or pro.status
 		pro.updated_at = datetime.utcnow()
-		pro.updated_by = admin['user_name']
+		pro.updated_by = current_user['user_name']
 
 		db.commit()
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Update product",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Update product successfully !',
 			'status_code' : status.HTTP_200_OK
@@ -134,8 +181,15 @@ async def update_product(db: Session, request : UpdateProduct, admin: dict):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_products_by_category(db: Session, category_id: int):
+async def get_products_by_category(db: Session, category_id: int, logRequest: Request, current_user: dict):
 	try:
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all products by category",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Get products by category successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -154,7 +208,7 @@ async def get_products_by_category(db: Session, category_id: int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_products_by_type(db: Session, type_id: int):
+async def get_products_by_type(db: Session, type_id: int, logRequest: Request, current_user: dict):
 	try:
 		# Check if needed, then -> Add (Added to determine type)
 		type_ = get_type_or_404(db, type_id)
@@ -170,6 +224,13 @@ async def get_products_by_type(db: Session, type_id: int):
 					'category_name': cate.category_name
 				}
 				pros.append(obj)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all products by type",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Get all products by type successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -178,12 +239,24 @@ async def get_products_by_type(db: Session, type_id: int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
-async def delete_product(db: Session, product_id : int):
+async def delete_product(db: Session, product_id : int, logRequest: Request, current_user : dict):
 	try:
+		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		pro = get_product_or_404(db, product_id)
 		db.delete(pro)
 		db.commit()
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Delete product",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Delete product succesfully !',
 			'status_code' : status.HTTP_204_NO_CONTENT
@@ -192,9 +265,10 @@ async def delete_product(db: Session, product_id : int):
 		return get_internal_server_error(ex)
 
 # User required
-async def get_products_by_role(db: Session, current_user: dict):
+async def get_products_by_role(db: Session, logRequest: Request, current_user: dict):
 	try:
-		pros = db.query(Product).filter(Product.product_role == current_user['role']).all()
+		# This need to revise database and change it again
+		pros = db.query(Product).filter(Product.product_role == current_user['role_id']).all()
 		products = []
 		for pro in pros:
 			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
@@ -214,6 +288,14 @@ async def get_products_by_role(db: Session, current_user: dict):
 				'status' : pro.status
 			}
 			products.append(obj)
+
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all products by role",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Get all products successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -223,9 +305,15 @@ async def get_products_by_role(db: Session, current_user: dict):
 		return get_internal_server_error(ex)
 
 # Admin required
-async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
+async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,logRequest: Request, current_user: dict):
 	try:
-		products = db.query(Product).filter(Product.product_role == role).all()
+		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
+		products = db.query(Product).filter(Product.product_role == role_id).all()
 		pros = []
 		for pro in products:
 			cate = get_category_or_404(db, pro.category_id)
@@ -247,6 +335,13 @@ async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 					'status' : pro.status
 				}
 				pros.append(obj)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all products by role and type",
+			target_type= "Product"
+		)
 		return {
 			'mess': 'Get products successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -257,9 +352,15 @@ async def get_products_by_role_and_type(db: Session, role: str, type_id: int):
 
 # User required
 # This function is used for user who log-in into our website and with their role
-async def get_products_by_category_and_role(db: Session, category_id: int, current_user : dict):
+async def get_products_by_category_and_role(db: Session, category_id: int, logRequest: Request, current_user : dict):
 	try:
-		products = db.query(Product).filter(Product.product_role == current_user['role']).all()
+		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
+		products = db.query(Product).filter(Product.product_role == current_user['role_id']).all()
 		pros = []
 		for pro in products:
 			cate = get_category_or_404(db, category_id)
@@ -281,6 +382,13 @@ async def get_products_by_category_and_role(db: Session, category_id: int, curre
 					'status' : pro.status
 				}
 				pros.append(obj)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all products by category and role",
+			target_type= "Product"
+		)
 		return {
 			'mess' : 'Get products by role and category sucessfully !',
 			'satus_code' : status.HTTP_200_OK,

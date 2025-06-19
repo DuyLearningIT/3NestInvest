@@ -4,10 +4,17 @@ from app.models import Category, Type
 from datetime import datetime
 from fastapi import HTTPException, status
 from app.utils import get_internal_server_error, get_category_or_404, get_type_or_404
+from app.utils.permission_checking import check_permission
 
 # Admin required
-async def create_category(db: Session, request : CreateCategory, admin: dict):
+async def create_category(db: Session, request : CreateCategory,current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		check = db.query(Category).filter(Category.category_name == request.category_name).first()
 		if check:
 			raise HTTPException(
@@ -82,15 +89,21 @@ async def get_category(db: Session, category_id : int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
-async def update_category(db: Session, request: UpdateCategory, admin: dict):
+
+async def update_category(db: Session, request: UpdateCategory, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		cate = get_category_or_404(db, request.category_id)
 		cate.category_name = request.category_name or cate.category_name
 		cate.description = request.description or request.description
 		cate.type_id = request.type_id or cate.type_id
 		cate.updated_at = datetime.now()
-		cate.updated_by = 'admin'
+		cate.updated_by = current_user['user_name']
 		db.commit()
 		db.refresh(cate)
 		return {
@@ -106,9 +119,14 @@ async def update_category(db: Session, request: UpdateCategory, admin: dict):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
-async def delete_category(db: Session, category_id: int, admin: dict):
+async def delete_category(db: Session, category_id: int, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		cate = get_category_or_404(db, category_id)
 		db.delete(cate)
 		db.commit()
@@ -122,8 +140,14 @@ async def delete_category(db: Session, category_id: int, admin: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
  
-async def get_categories_by_type(db: Session, type_id: int):
+async def get_categories_by_type(db: Session, type_id: int, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		return{
 			'mess' : 'Get categories by type successfully !',
 			'status_code' : status.HTTP_200_OK,

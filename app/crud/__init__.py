@@ -6,4 +6,4 @@ from .order import *
 from .request import *
 from .deal import *
 from .permission_type import *
-from .permission import *
+from .permission import get_permissions_by_role

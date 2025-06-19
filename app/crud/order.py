@@ -1,14 +1,21 @@
 from sqlalchemy.orm import Session
 from app.models import Order, OrderDetails, User, Product, Deal
 from app.schemas import OrderCreate, OrderUpdate, OrderApprove
-from fastapi import Depends
+from fastapi import Depends, Request
 from datetime import datetime
 from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, get_product_or_404, get_order_or_404
+from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, get_product_or_404, get_order_or_404, log_activity
+from app.utils.permission_checking import check_permission
 
 # User required
-async def create_order(db: Session, order : OrderCreate, current_user: dict):
+async def create_order(db: Session, order : OrderCreate, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		user = get_user_or_404(db, current_user['user_id'])
 		check_deal = get_deal_or_404(db, order.deal_id)
 		if check_deal.user_id != user.user_id:
@@ -63,7 +70,13 @@ async def create_order(db: Session, order : OrderCreate, current_user: dict):
 
 		db_order.total_budget = total_budget
 		db.commit()
-
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Create order",
+			target_type= "Order"
+		)
 		return {
 			'mess': 'Create order successfully!',
 			'status_code': status.HTTP_201_CREATED,
@@ -75,9 +88,16 @@ async def create_order(db: Session, order : OrderCreate, current_user: dict):
 		return get_internal_server_error(ex)
 
 # User required
-async def get_order(db: Session, order_id : int):
+async def get_order(db: Session, order_id : int, logRequest: Request, current_user: dict):
 	try:
 		order = get_order_or_404(db, order_id)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get order by id",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get order successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -86,8 +106,14 @@ async def get_order(db: Session, order_id : int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def update_order(db: Session, request: OrderUpdate, current_user : dict):
+async def update_order(db: Session, request: OrderUpdate, logRequest: Request, current_user : dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		user = get_user_or_404(db, current_user['user_id'])
 		
 		order = get_order_or_404(db, request.order_id)
@@ -99,6 +125,13 @@ async def update_order(db: Session, request: OrderUpdate, current_user : dict):
 			order.updated_by = user.user_name
 
 			db.commit()
+			log_activity(
+				db=db,
+				request= logRequest,
+				user_id= current_user['user_id'],
+				description= "Update order",
+				target_type= "Order"
+			)
 			return {
 				'mess' : 'Update order successfully !',
 				'status_code' : status.HTTP_200_OK
@@ -113,16 +146,29 @@ async def update_order(db: Session, request: OrderUpdate, current_user : dict):
 		return get_internal_server_error(ex)
 
 # High-level required: This allows admin and manager for approving or rejecting order which is submitted
-async def change_status_of_order(db: Session, request: OrderApprove):
+async def change_status_of_order(db: Session, request: OrderApprove, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'review', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		order = get_order_or_404(db, request.order_id)
 		order.status = request.status or order.status
 		order.reason = request.reason or order.reason
 		db.commit()
 		db.refresh(order)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Review order",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Change status of order successfully !',
-			'status_code' : satus.HTTP_200_OK,
+			'status_code' : status.HTTP_200_OK,
 			'data' : order
 		}
 
@@ -131,8 +177,14 @@ async def change_status_of_order(db: Session, request: OrderApprove):
 		return get_internal_server_error(ex)
 
 # User required 
-async def get_order_details_by_order(db: Session, order_id : int):
+async def get_order_details_by_order(db: Session, order_id : int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		od_details = db.query(OrderDetails).filter(OrderDetails.order_id == order_id).all()
 		order_details = []
 		for detail in od_details:
@@ -148,6 +200,13 @@ async def get_order_details_by_order(db: Session, order_id : int):
 				'final_price' : detail.final_price
 			}
 			order_details.append(obj)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get orderd details by order",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get all order details of the order successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -157,8 +216,14 @@ async def get_order_details_by_order(db: Session, order_id : int):
 		return get_internal_server_error(ex)
 
 # User required
-async def delete_order(db: Session, order_id: int, current_user: dict):
+async def delete_order(db: Session, order_id: int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		order = get_order_or_404(db, order_id)
 		deal = get_deal_or_404(db, order.deal_id)
 
@@ -174,6 +239,13 @@ async def delete_order(db: Session, order_id: int, current_user: dict):
 			)
 		db.delete(order)
 		db.commit()
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Delete order",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Delete order successfully !',
 			'status_code' : status.HTTP_204_NO_CONTENT
@@ -183,9 +255,22 @@ async def delete_order(db: Session, order_id: int, current_user: dict):
 		return get_internal_server_error(ex)
 
 # User required 
-async def get_orders_by_deal(db: Session, deal_id: int):
+async def get_orders_by_deal(db: Session, deal_id: int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deal = get_deal_or_404(db, deal_id)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get orders by deal",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get orders by deal succesfuly !',
 			'status_code' : status.HTTP_200_OK,
@@ -195,8 +280,14 @@ async def get_orders_by_deal(db: Session, deal_id: int):
 		return get_internal_server_error(ex)
 
 
-async def get_orders_by_user(db: Session, current_user: dict):
+async def get_orders_by_user(db: Session, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deals = db.query(Deal).filter(Deal.user_id == current_user['user_id']).all()
 		ords = []
 		for deal in deals:
@@ -206,6 +297,13 @@ async def get_orders_by_user(db: Session, current_user: dict):
 				'orders' : db.query(Order).filter(Order.deal_id == d.deal_id).all()
 			}
 			ords.append(obj)
+			log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get orders by user",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get orders by user successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -215,7 +313,7 @@ async def get_orders_by_user(db: Session, current_user: dict):
 		return get_internal_server_error(ex)
 
 # High-level required
-async def get_orders(db: Session):
+async def get_orders(db: Session, logRequest: Request, current_user: dict):
 	try:
 		orders = db.query(Order).filter(Order.status != 'draft').all()
 		ods = []
@@ -234,6 +332,13 @@ async def get_orders(db: Session):
 				'status' : order.status
 			}
 			ods.append(obj)
+			log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all orders",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get all orders successfully !',
 			'status_code': status.HTTP_200_OK,
@@ -243,13 +348,19 @@ async def get_orders(db: Session):
 		return get_internal_server_error(ex)
 
 # Admin required
-async def get_orders_by_role(db: Session, role: str):
+async def get_orders_by_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deals = db.query(Deal).all()
 		ods = []
 		for deal in deals:
 			user = get_user_or_404(db, deal.user_id)
-			if user.role == role:
+			if user.role_id == role_id:
 				orders = db.query(Order).filter(Order.deal_id == deal.deal_id).all()
 				for order in orders:
 					if order.status != 'draft':
@@ -263,11 +374,17 @@ async def get_orders_by_role(db: Session, role: str):
 							'status' : order.status
 						}
 						ods.append(obj)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get orders by role",
+			target_type= "Order"
+		)
 		return {
 			'mess' : 'Get orders by role successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data' : ods
 		}
-
 	except Exception as ex:
 		return get_internal_server_error(ex)

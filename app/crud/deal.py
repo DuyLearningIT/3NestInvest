@@ -1,14 +1,21 @@
 from sqlalchemy.orm import Session
 from app.models import Order, OrderDetails, User, Product, Deal
 from app.schemas import DealUpdate, DealCreate, DealApprove
-from fastapi import Depends
+from fastapi import Depends, Request
 from datetime import datetime
 from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404
+from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, log_activity
+from app.utils.permission_checking import check_permission
 
-# High-level required
-async def get_deals(db: Session):
+async def get_deals(db: Session, logRequest: Request, current_user:dict):
 	try:
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all deals",
+			target_type= "Deal"
+		)
 		return {
 			'mess' : 'Get all deals successfully !',
 			'data' : db.query(Deal).filter(Deal.status != 'draft').all(),
@@ -20,10 +27,17 @@ async def get_deals(db: Session):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 
-async def get_deal(db: Session, deal_id : int):
+async def get_deal(db: Session, deal_id : int, logRequest: Request, current_user: dict):
 	try:
 		deal = get_deal_or_404(db, deal_id)
 		user = get_user_or_404(db, deal.user_id)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get deal by id",
+			target_type= "Deal"
+		)
 		return {
 			'mess' : 'Get deal successfully !',
 			'data' : {
@@ -35,9 +49,14 @@ async def get_deal(db: Session, deal_id : int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# User required
-async def create_deal(db: Session, request: DealCreate, current_user : dict):
+async def create_deal(db: Session, request: DealCreate, logRequest: Request, current_user : dict):
 	try:
+		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		user = get_user_or_404(db, current_user['user_id'])
 		check_deal = db.query(Deal).filter(Deal.tax_indentification_number == request.tax_indentification_number, Deal.status == 'approved').first()
 		if check_deal:
@@ -63,6 +82,13 @@ async def create_deal(db: Session, request: DealCreate, current_user : dict):
 		db.add(new_deal)
 		db.commit()
 		db.refresh(new_deal)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Create a deal",
+			target_type= "Deal"
+		)
 		return{
 			'mess' : 'Create deal successfully !',
 			'status_code': status.HTTP_201_CREATED,
@@ -72,9 +98,14 @@ async def create_deal(db: Session, request: DealCreate, current_user : dict):
 		db.rollback()
 		return get_internal_server_error(ex)
 
-# User required
-async def update_deal(db: Session, request: DealUpdate, current_user: dict):
+async def update_deal(db: Session, request: DealUpdate, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		user = get_user_or_404(db, current_user['user_id'])
 		deal = get_deal_or_404(db, request.deal_id)
 
@@ -99,6 +130,13 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
         
 		db.commit()
 		db.refresh(deal)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Update a deal",
+			target_type= "Deal"
+		)
 		return {
 			'mess': 'Update deal successfully!',
 			'status_code': status.HTTP_200_OK,
@@ -109,9 +147,14 @@ async def update_deal(db: Session, request: DealUpdate, current_user: dict):
 		db.rollback()
 		return get_internal_server_error(ex)
 
-# User required
-async def delete_deal(db: Session, deal_id : int, current_user: dict):
+async def delete_deal(db: Session, deal_id : int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deal = get_deal_or_404(db, deal_id)
 		if deal.user_id != current_user['user_id']:
 			raise HTTPException(
@@ -120,6 +163,13 @@ async def delete_deal(db: Session, deal_id : int, current_user: dict):
 			)
 		db.delete(deal)
 		db.commit()
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Delete a deal",
+			target_type= "Deal"
+		)
 		return {
 			'mess' : 'Delete deal successfully !',
 			'status_code' : status.HTTP_204_NO_CONTENT
@@ -128,14 +178,26 @@ async def delete_deal(db: Session, deal_id : int, current_user: dict):
 		db.rollback()
 		return get_internal_server_error(ex)
 
-# High-level required 
-async def change_status_of_deal(db: Session, request : DealApprove):
+async def change_status_of_deal(db: Session, request : DealApprove, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'review', 'deal', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deal = get_deal_or_404(db, request.deal_id)
 		deal.status = request.status or deal.status
 		deal.reason = request.reason or deal.reason
 		db.commit()
 		db.refresh(deal)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Review a deal",
+			target_type= "Deal"
+		)
 		return {
 			'mess' : 'Change the status of deal successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -145,10 +207,16 @@ async def change_status_of_deal(db: Session, request : DealApprove):
 		db.rollback()
 		return get_internal_server_error(ex)
 
-# User required
-async def get_deals_by_user(db: Session, current_user: dict):
+async def get_deals_by_user(db: Session, logRequest: Request, current_user: dict):
 	try:
 		user = get_user_or_404(db, current_user['user_id'])
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all deals  by user",
+			target_type= "Deal"
+		)
 		return {
 			'mess' : 'Get deals by user successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -160,15 +228,27 @@ async def get_deals_by_user(db: Session, current_user: dict):
 			status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		)
 	
-# Admin required
-async def get_deals_by_role(db: Session, role: str):
+async def get_deals_by_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		deals = db.query(Deal).all()
 		ds = []
 		for deal in deals:
 			user = get_user_or_404(db, deal.user_id)
-			if user.role == role:
+			if user.role_id == role_id:
 				ds.append(deal)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all deals by role",
+			target_type= "Deal"
+		)
 		return {
 			'mess': 'Get deals by role successfully !',
 			'status_code' : status.HTTP_200_OK,

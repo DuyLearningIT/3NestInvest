@@ -9,6 +9,8 @@ router = APIRouter(
 	tags=['Permissions']
 )
 
+# COMMENT PERMISISON FOR USING LATER
+
 # @router.post('/create-permission')
 # async def create_permission(db: db_depend, request: PermissionCreate):
 # 	response = await permission_crud.create_permission(db, request)
@@ -38,3 +40,8 @@ async def get_permissions_by_type(db: db_depend, request_id):
 # async def delete_permission(db: db_depend, request_id):
 # 	response = await permission_crud.delete_permission(db, request_id)
 # 	return repsonse 
+
+@router.get('/get-permisisons-by-role')
+async def get_permissions_by_role(db: db_depend, role_id: int):
+	response = await permission_crud.get_permissions_by_role(db, role_id)
+	return response

@@ -2,12 +2,18 @@ from sqlalchemy.orm import Session, load_only
 from app.models import Type
 from app.schemas import CRUDType, UpdateType
 from datetime import datetime
-from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_type_or_404
+from fastapi import HTTPException, status, Request
+from app.utils import get_internal_server_error, get_type_or_404, log_activity
+from app.utils.permission_checking import check_permission
 
-# Admin required
-async def create_type(db: Session, request : CRUDType):
+async def create_type(db: Session, request : CRUDType, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		check = db.query(Type).filter(Type.type_name == request.type_name).first()
 		if check:
 			raise HTTPException(
@@ -21,7 +27,13 @@ async def create_type(db: Session, request : CRUDType):
 		db.add(new_type)
 		db.commit()
 		db.refresh(new_type)
-
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Create type",
+			target_type= "Type"
+		)
 		return {
 			'mess' : 'Create type successfully !',
 			'status_code' : status.HTTP_201_CREATED,
@@ -36,8 +48,15 @@ async def create_type(db: Session, request : CRUDType):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_types(db: Session):
+async def get_types(db: Session, logRequest: Request, current_user: dict):
 	try:
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get all types",
+			target_type= "Type"
+		)
 		return {
 			'mess': 'Get all types successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -46,9 +65,16 @@ async def get_types(db: Session):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_type(db : Session, type_id : int):
+async def get_type(db : Session, type_id : int, logRequest: Request, current_user: dict):
 	try:
 		check = get_type_or_404(db, type_id)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get type by id",
+			target_type= "Type"
+		)
 		return {
 			'mess' : 'Get type successfully !',
 			'status_code' : status.HTTP_200_OK,
@@ -61,17 +87,30 @@ async def get_type(db : Session, type_id : int):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
-async def update_type(db: Session, request: UpdateType, admin : dict):
+
+async def update_type(db: Session, request: UpdateType, logRequest: Request, current_user : dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		check = get_type_or_404(db, request.type_id)
 		check.type_name = request.type_name or check.type_name
 		check.description = request.description or check.description
 		check.updated_at = datetime.now()
-		check.updated_by = admin['user_name']
+		check.updated_by = current_user['user_name']
 
 		db.commit()
 		db.refresh(check)
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Update type",
+			target_type= "Type"
+		)
 		return {
 			'mess' : 'Update type successfully !',
 			'status_code': status.HTTP_200_OK,
@@ -86,12 +125,24 @@ async def update_type(db: Session, request: UpdateType, admin : dict):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
-async def delete_type(db: Session, type_id : int):
+async def delete_type(db: Session, type_id : int, logRequest: Request, current_user: dict):
 	try:
+		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		if not permission:
+			return {
+				'mess' : "You don't have permission for accessing this function !",
+				'status_code' : status.HTTP_403_FORBIDDEN 
+			}
 		check = get_type_or_404(db, type_id)
 		db.delete(check)
 		db.commit()
+		log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Delete type",
+			target_type= "Type"
+		)
 		return {
 			'mess' : 'Delete type successfully !',
 			'status_code' : status.HTTP_204_NO_CONTENT

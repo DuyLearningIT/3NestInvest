@@ -17,3 +17,4 @@ class Role(Base):
 	# Set relationship
 	role_permission = relationship('RolePermission', back_populates='role', cascade='all, delete-orphan')
 	users = relationship('User', back_populates= 'role', cascade ='all, delete-orphan')
+	products = relationship('Product', back_populates='role')

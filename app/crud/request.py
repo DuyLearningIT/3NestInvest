@@ -3,6 +3,8 @@ from app.models import UserRequest
 from app.schemas import CreateRequest, UpdateRequest
 from fastapi import HTTPException, status
 from app.utils import get_internal_server_error, get_request_or_404
+from app.utils.permission_checking import check_permission
+
 
 async def create_request(db: Session, request : CreateRequest):
 	try:
@@ -22,7 +24,6 @@ async def create_request(db: Session, request : CreateRequest):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
 async def update_request(db: Session, request: UpdateRequest):
 	try:
 		check = get_request_or_404(db, request.request_id)
@@ -40,7 +41,7 @@ async def update_request(db: Session, request: UpdateRequest):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
+
 async def get_request(db: Session, request_id):
 	try: 
 		request = get_request_or_404(db, request_id)
@@ -55,7 +56,6 @@ async def get_request(db: Session, request_id):
 			'status_code' : 500
 		}
 
-# Admin required
 async def get_requests(db: Session):
 	try:
 		return {
@@ -66,7 +66,6 @@ async def get_requests(db: Session):
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-# Admin required
 async def delete_request(db: Session, request_id:int):
 	try: 
 		request = get_request_or_404(db, request_id)

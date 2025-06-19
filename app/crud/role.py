@@ -2,11 +2,19 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Permission, Role, RolePermission
 from app.schemas import RoleCreate, RoleUpdate
 from datetime import datetime
-from fastapi import HTTPException, status
-from app.utils import get_internal_server_error
+from fastapi import HTTPException, status, Request
+from app.utils import get_internal_server_error, log_activity
+from app.utils.permission_checking import check_permission
 
-async def create_role(db: Session, request: RoleCreate):
+
+async def create_role(db: Session, request: RoleCreate, logRequest: Request, current_user: dict):
     try:
+        permission = await check_permission(db, 'manage', 'role', current_user['role_id'])
+        if not permission:
+            return {
+                'mess' : "You don't have permission for accessing this function !",
+                'status_code' : status.HTTP_403_FORBIDDEN 
+        }
         existing_role = db.query(Role).filter(Role.role_name == request.role_name).first()
         if existing_role:
             return {
@@ -68,6 +76,13 @@ async def create_role(db: Session, request: RoleCreate):
             'created_by': role_with_permissions.created_by,
             'permissions': permissions_data
         }
+        log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Create role",
+			target_type= "Role"
+		)
         
         return {
             'mess': 'Role created successfully with permissions!',
@@ -79,12 +94,32 @@ async def create_role(db: Session, request: RoleCreate):
         db.rollback()
         return get_internal_server_error(ex)
 
+async def get_roles(db: Session, logRequest: Request, current_user: dict):
+    try:
+        log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get roles",
+			target_type= "Role"
+		)
+        return {
+            'mess' : 'Get all roles successfully !',
+            'status_code' : status.HTTP_200_OK,
+            'data' : db.query(Role).all()
+        }
+    except Exception as ex:
+        return get_internal_server_error(ex)
 
-async def get_role(db: Session, role_id: int):
+async def get_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
     try:
         role = (
             db.query(Role)
-            .options(joinedload(Role.role_permission).joinedload(RolePermission.permission))
+            .options(
+                joinedload(Role.role_permission)
+                .joinedload(RolePermission.permission)
+                .joinedload(Permission.permission_type)  
+            )
             .filter(Role.role_id == role_id)
             .first()
         )
@@ -101,7 +136,9 @@ async def get_role(db: Session, role_id: int):
                 {
                     'permission_id': rp.permission.permission_id,
                     'permission_name': rp.permission.permission_name,
-                    'description': rp.permission.description
+                    # 'description': rp.permission.description,
+                    # 'permission_type_id': rp.permission.permission_type_id, 
+                    'permission_type_name': rp.permission.permission_type.permission_type_name if rp.permission.permission_type else None  
                 }
                 for rp in role.role_permission
             ], key=lambda x: x['permission_id'])
@@ -116,7 +153,13 @@ async def get_role(db: Session, role_id: int):
             'updated_by': role.updated_by,
             'permissions': permissions_data
         }
-        
+        log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Get role by id",
+			target_type= "Role"
+		)
         return {
             'mess': 'Role retrieved successfully!',
             'status_code': status.HTTP_200_OK,
@@ -127,56 +170,14 @@ async def get_role(db: Session, role_id: int):
         return get_internal_server_error(ex)
 
 
-async def get_roles(db: Session, skip: int = 0, limit: int = 100):
+async def update_role(db: Session, request: RoleUpdate, logRequest: Request, current_user: dict):
     try:
-        roles = (
-            db.query(Role)
-            .options(joinedload(Role.role_permission).joinedload(RolePermission.permission))
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-        
-        roles_data = []
-        for role in roles:
-            permissions_data = []
-            if role.role_permission:
-                permissions_data = sorted([
-                    {
-                        'permission_id': rp.permission.permission_id,
-                        'permission_name': rp.permission.permission_name,
-                        'description': rp.permission.description
-                    }
-                    for rp in role.role_permission
-                ], key=lambda x: x['permission_id'])
-            
-            role_data = {
-                'role_id': role.role_id,
-                'role_name': role.role_name,
-                'description': role.description,
-                'created_at': role.created_at,
-                'created_by': role.created_by,
-                'updated_at': role.updated_at,
-                'updated_by': role.updated_by,
-                'permissions': permissions_data
-            }
-            roles_data.append(role_data)
-        
-        roles_data.sort(key=lambda x: x['role_id'])
-        
-        return {
-            'mess': 'Roles retrieved successfully!',
-            'status_code': status.HTTP_200_OK,
-            'data': roles_data,
-            'total': len(roles_data)
+        permission = await check_permission(db, 'manage', 'role', current_user['role_id'])
+        if not permission:
+            return {
+                'mess' : "You don't have permission for accessing this function !",
+                'status_code' : status.HTTP_403_FORBIDDEN 
         }
-        
-    except Exception as ex:
-        return get_internal_server_error(ex)
-
-
-async def update_role(db: Session, request: RoleUpdate):
-    try:
         role = db.query(Role).filter(Role.role_id == request.role_id).first()
         if not role:
             return {
@@ -201,7 +202,7 @@ async def update_role(db: Session, request: RoleUpdate):
             role.description = request.description
         
         role.updated_at = datetime.utcnow()
-        role.updated_by = 'admin'  
+        role.updated_by = current_user['user_name']  
         
         if request.permissions is not None:
             db.query(RolePermission).filter(RolePermission.role_id == request.role_id).delete()
@@ -255,7 +256,13 @@ async def update_role(db: Session, request: RoleUpdate):
             'updated_by': updated_role.updated_by,
             'permissions': permissions_data
         }
-        
+        log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Update role",
+			target_type= "Role"
+		)
         return {
             'mess': 'Role updated successfully!',
             'status_code': status.HTTP_200_OK,
@@ -267,8 +274,14 @@ async def update_role(db: Session, request: RoleUpdate):
         return get_internal_server_error(ex)
 
 
-async def delete_role(db: Session, role_id: int):
+async def delete_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
     try:
+        permission = await check_permission(db, 'manage', 'role', current_user['role_id'])
+        if not permission:
+            return {
+                'mess' : "You don't have permission for accessing this function !",
+                'status_code' : status.HTTP_403_FORBIDDEN 
+        }
         role = db.query(Role).filter(Role.role_id == role_id).first()
         if not role:
             return {
@@ -284,18 +297,18 @@ async def delete_role(db: Session, role_id: int):
         
         db.delete(role)
         db.commit()
-        
+        log_activity(
+			db=db,
+			request= logRequest,
+			user_id= current_user['user_id'],
+			description= "Delete role",
+			target_type= "Role"
+		)
         return {
             'mess': 'Role deleted successfully!',
-            'status_code': status.HTTP_200_OK
+            'status_code': status.HTTP_204_NO_CONTENT
         }
         
     except Exception as ex:
         db.rollback()
-        return get_internal_server_error(ex)
-    
-async def get_permission_by_role(db: Session, role_id : int):
-    try:
-        pass
-    except Exception as ex:
         return get_internal_server_error(ex)

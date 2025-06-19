@@ -30,10 +30,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         user_name = payload.get('user_name')
         user_email = payload.get('user_email')
         user_id = payload.get('user_id')
+        role_id = payload.get('role_id')
         role = payload.get('role')
         if user_id is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id, user_name=user_name, user_email=user_email, role=role)
+        token_data = TokenData(user_id=user_id, user_name=user_name, user_email=user_email, role=role, role_id = role_id)
     except InvalidTokenError:
         raise credentials_exception
 
@@ -41,6 +42,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         'user_name' : token_data.user_name,
         'user_id': token_data.user_id,
         'user_email': token_data.user_email,
+        'role_id' : token_data.role_id,
         'role': token_data.role
     }
 

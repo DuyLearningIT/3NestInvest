@@ -4,3 +4,4 @@ from .mail_sending import conf , generate_random_password
 # from .chatbot import chatbot
 from .TIN import get_info_from_tin
 from .helper import *
+from .tracking import log_activity
