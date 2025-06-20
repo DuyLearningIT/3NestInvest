@@ -289,11 +289,12 @@ async def delete_role(db: Session, role_id: int, logRequest: Request, current_us
                 'status_code': status.HTTP_404_NOT_FOUND
             }
         
-        if role.users:
-            return {
-                'mess': 'Cannot delete role that is assigned to users!',
-                'status_code': status.HTTP_400_BAD_REQUEST
-            }
+        # This code is userd for restricting to delete role which already has at least a user -> Disable at this time 
+        # if role.users:
+        #     return {
+        #         'mess': 'Cannot delete role that is assigned to users!',
+        #         'status_code': status.HTTP_400_BAD_REQUEST
+        #     }
         
         db.delete(role)
         db.commit()

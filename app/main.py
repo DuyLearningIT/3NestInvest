@@ -11,6 +11,7 @@ from app.api.v1.endpoints import deal as deal_router
 from app.api.v1.endpoints import permission_type as pm_type_router
 from app.api.v1.endpoints import permission as permission_router
 from app.api.v1.endpoints import role as role_router
+from app.api.v1.endpoints import activity as activity_router
 
 app = FastAPI()
 
@@ -33,6 +34,7 @@ app.include_router(deal_router.router)
 app.include_router(pm_type_router.router)
 app.include_router(permission_router.router)
 app.include_router(role_router.router)
+app.include_router(activity_router.router)
 
 
 @app.get('/')

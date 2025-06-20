@@ -1,7 +1,8 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models import Order, OrderDetails, User, Product, Deal
 from app.schemas import DealUpdate, DealCreate, DealApprove
 from fastapi import Depends, Request
+from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from fastapi import HTTPException, status
 from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, log_activity
@@ -41,7 +42,20 @@ async def get_deal(db: Session, deal_id : int, logRequest: Request, current_user
 		return {
 			'mess' : 'Get deal successfully !',
 			'data' : {
-				'deal' : deal,
+				'deal' : {
+					'deal_id': deal.deal_id,
+					'deal_type': deal.deal_type,
+					'user_id': deal.user_id,
+					'contact_name': deal.contact_name,
+					'contact_phone': deal.contact_phone,
+					'contact_email': deal.contact_email,
+					'customer_name' : deal.customer_name,
+					'tax_identification_number': deal.tax_indentification_number,
+					'address': deal.address,
+					'billing_address': deal.billing_address,
+					'created_at': deal.created_at.isoformat() if deal.created_at else None,
+					'status': deal.status
+				},
 				'role' : user.role
 			},
 			'status_code' : status.HTTP_200_OK
@@ -233,26 +247,39 @@ async def get_deals_by_role(db: Session, role_id: int, logRequest: Request, curr
 		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
 		if not permission:
 			return {
-				'mess' : "You don't have permission for accessing this function !",
-				'status_code' : status.HTTP_403_FORBIDDEN 
+				'mess': "You don't have permission for accessing this function!",
+				'status_code': status.HTTP_403_FORBIDDEN
 			}
-		deals = db.query(Deal).all()
-		ds = []
-		for deal in deals:
-			user = get_user_or_404(db, deal.user_id)
-			if user.role_id == role_id:
-				ds.append(deal)
+		deals = db.query(Deal).join(User).filter(User.role_id == role_id).all()
+
 		log_activity(
 			db=db,
-			request= logRequest,
-			user_id= current_user['user_id'],
-			description= "Get all deals by role",
-			target_type= "Deal"
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all deals by role",
+			target_type="Deal"
 		)
+
 		return {
-			'mess': 'Get deals by role successfully !',
-			'status_code' : status.HTTP_200_OK,
-			'data' : ds
-		}
+			'mess': 'Get deals by role successfully!',
+			'status_code': status.HTTP_200_OK,
+			'data': [
+				{
+					'deal_id': deal.deal_id,
+					'deal_type': deal.deal_type,
+					'user_id': deal.user_id,
+					'contact_name': deal.contact_name,
+					'contact_phone': deal.contact_phone,
+					'contact_email': deal.contact_email,
+					'customer_name' : deal.customer_name,
+					'tax_identification_number': deal.tax_indentification_number,
+					'address': deal.address,
+					'billing_address': deal.billing_address,
+					'created_at': deal.created_at.isoformat() if deal.created_at else None,
+					'status': deal.status
+				}
+				for deal in deals
+			]
+		}																
 	except Exception as ex:
 		return get_internal_server_error(ex)

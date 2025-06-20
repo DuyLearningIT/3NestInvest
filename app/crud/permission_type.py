@@ -6,8 +6,6 @@ from fastapi import HTTPException, status
 from app.utils import get_internal_server_error, get_permission_type_or_404, get_current_user
 from app.utils.permission_checking import check_permission
 
-
-
 async def create_permission_type(db: Session, request: PermissionTypeCreate, current_user: dict):
 	try:
 		permission = await check_permission(db, 'manage', 'user', current_user['role_id'])

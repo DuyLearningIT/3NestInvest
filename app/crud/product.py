@@ -64,42 +64,48 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
-async def get_products(db : Session, logRequest: Request, current_user: dict):
+async def get_products(db: Session, logRequest: Request, current_user: dict):
 	try:
-		pros = db.query(Product).all()
+		products_query = db.query(Product) \
+			.options(joinedload(Product.category).joinedload(Category.tb_type)) \
+			.all()
+
 		products = []
-		for pro in pros:
-			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
-			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
-			if pro.status == 'inactive': # Hide all inactive product
+		for pro in products_query:
+			if pro.status == 'inactive':
 				continue
-			obj = {
-				'product_id' : pro.product_id,
-				'product_name' : pro.product_name,
-				'sku_partnumber' : pro.sku_partnumber,
-				'product_role' : pro.product_role,
-				'description' : pro.description,
-				'price' : pro.price,
-				'category_name': cate.category_name,
-				'type_name' : type_.type_name,
-				'maximum_discount' : pro.maximum_discount,
-				'maximum_discount_price' : pro.maximum_discount_price,
-				'channel_cost' : pro.channel_cost,
-				'created_at' : pro.created_at,
-				'status' : pro.status
-			}
-			products.append(obj)
-			log_activity(
-				db=db,
-				request= logRequest,
-				user_id= current_user['user_id'],
-				description= "Get all products",
-				target_type= "Product"
-			)
+
+			cate = pro.category
+			type_ = cate.tb_type if cate else None
+
+			products.append({
+				'product_id': pro.product_id,
+				'product_name': pro.product_name,
+				'sku_partnumber': pro.sku_partnumber,
+				'product_role': pro.product_role,
+				'description': pro.description,
+				'price': pro.price,
+				'category_name': cate.category_name if cate else None,
+				'type_name': type_.type_name if type_ else None,
+				'maximum_discount': pro.maximum_discount,
+				'maximum_discount_price': pro.maximum_discount_price,
+				'channel_cost': pro.channel_cost,
+				'created_at': pro.created_at,
+				'status': pro.status
+			})
+
+		log_activity(
+			db=db,
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all products",
+			target_type="Product"
+		)
+
 		return {
-			'mess' : 'Get all products successfully !',
-			'status_code' : status.HTTP_200_OK,
-			'data' : products
+			'mess': 'Get all products successfully!',
+			'status_code': status.HTTP_200_OK,
+			'data': products
 		}
 	except Exception as ex:
 		return get_internal_server_error(ex)
@@ -210,32 +216,36 @@ async def get_products_by_category(db: Session, category_id: int, logRequest: Re
 
 async def get_products_by_type(db: Session, type_id: int, logRequest: Request, current_user: dict):
 	try:
-		# Check if needed, then -> Add (Added to determine type)
 		type_ = get_type_or_404(db, type_id)
-		cates = db.query(Category).filter(Category.type_id == type_id).all()
+
+		categories = db.query(Category) \
+			.options(joinedload(Category.products)) \
+			.filter(Category.type_id == type_id).all()
+
 		pros = []
-		for cate in cates:
-			products = db.query(Product).filter(Product.category_id == cate.category_id).all()
-			for pro in products:
-				if pro.status =='inactive':
+		for cate in categories:
+			for pro in cate.products:
+				if pro.status == 'inactive':
 					continue
-				obj = {
-					'product' : pro,
+				pros.append({
+					'product': pro,
 					'category_name': cate.category_name
-				}
-				pros.append(obj)
+				})
+
 		log_activity(
 			db=db,
-			request= logRequest,
-			user_id= current_user['user_id'],
-			description= "Get all products by type",
-			target_type= "Product"
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all products by type",
+			target_type="Product"
 		)
+
 		return {
-			'mess' : 'Get all products by type successfully !',
-			'status_code' : status.HTTP_200_OK,
-			'data' : pros
+			'mess': 'Get all products by type successfully!',
+			'status_code': status.HTTP_200_OK,
+			'data': pros
 		}
+
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
@@ -267,84 +277,98 @@ async def delete_product(db: Session, product_id : int, logRequest: Request, cur
 # User required
 async def get_products_by_role(db: Session, logRequest: Request, current_user: dict):
 	try:
-		# This need to revise database and change it again
-		pros = db.query(Product).filter(Product.product_role == current_user['role_id']).all()
+		products_query = db.query(Product).options(
+			joinedload(Product.category).joinedload(Category.tb_type)
+		).filter(Product.product_role == current_user['role_id'])
+
 		products = []
-		for pro in pros:
-			cate = db.query(Category).filter(Category.category_id == pro.category_id).first()
-			type_ = db.query(Type).filter(Type.type_id == cate.type_id).first()
+		for pro in products_query:
+			cate = pro.category
+			type_ = cate.tb_type if cate else None
+
 			obj = {
-				'product_id' : pro.product_id,
-				'product_name' : pro.product_name,
-				'sku_partnumber' : pro.sku_partnumber,
-				'product_role' : pro.product_role,
-				'description' : pro.description,
-				'price' : pro.price,
-				'category_name': cate.category_name,
-				'maximum_discount' : pro.maximum_discount,
-				'maximum_discount_price' : pro.maximum_discount_price ,
-				'channel_cost' : pro.channel_cost,
-				'created_at' : pro.created_at,
-				'status' : pro.status
+				'product_id': pro.product_id,
+				'product_name': pro.product_name,
+				'sku_partnumber': pro.sku_partnumber,
+				'product_role': pro.product_role,
+				'description': pro.description,
+				'price': pro.price,
+				'category_name': cate.category_name if cate else None,
+				'maximum_discount': pro.maximum_discount,
+				'maximum_discount_price': pro.maximum_discount_price,
+				'channel_cost': pro.channel_cost,
+				'created_at': pro.created_at,
+				'status': pro.status
 			}
 			products.append(obj)
 
 		log_activity(
 			db=db,
-			request= logRequest,
-			user_id= current_user['user_id'],
-			description= "Get all products by role",
-			target_type= "Product"
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all products by role",
+			target_type="Product"
 		)
+
 		return {
-			'mess' : 'Get all products successfully !',
-			'status_code' : status.HTTP_200_OK,
-			'data' : products
+			'mess': 'Get all products successfully!',
+			'status_code': status.HTTP_200_OK,
+			'data': products
 		}
+
 	except Exception as ex:
 		return get_internal_server_error(ex)
 
 # Admin required
-async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,logRequest: Request, current_user: dict):
+async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int, logRequest: Request, current_user: dict):
 	try:
 		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
 		if not permission:
 			return {
-				'mess' : "You don't have permission for accessing this function !",
-				'status_code' : status.HTTP_403_FORBIDDEN 
+				'mess': "You don't have permission for accessing this function!",
+				'status_code': status.HTTP_403_FORBIDDEN
 			}
-		products = db.query(Product).filter(Product.product_role == role_id).all()
+
+		products_query = db.query(Product).options(
+			joinedload(Product.category).joinedload(Category.tb_type)
+		).filter(
+			Product.product_role == role_id,
+			Product.status != 'inactive'
+		)
+
 		pros = []
-		for pro in products:
-			cate = get_category_or_404(db, pro.category_id)
-			if pro.status == 'inactive':
+		for pro in products_query:
+			cate = pro.category
+			if not cate or cate.type_id != type_id:
 				continue
-			if cate.type_id == type_id:
-				obj = {
-					'product_id' : pro.product_id,
-					'product_name' : pro.product_name,
-					'sku_partnumber' : pro.sku_partnumber,
-					'product_role' : pro.product_role,
-					'description' : pro.description,
-					'price' : pro.price,
-					'category_name': cate.category_name,
-					'maximum_discount' : pro.maximum_discount,
-					'maximum_discount_price' : pro.maximum_discount_price,
-					'channel_cost' : pro.channel_cost,
-					'created_at' : pro.created_at,
-					'status' : pro.status
-				}
-				pros.append(obj)
+
+			obj = {
+				'product_id': pro.product_id,
+				'product_name': pro.product_name,
+				'sku_partnumber': pro.sku_partnumber,
+				'product_role': pro.product_role,
+				'description': pro.description,
+				'price': pro.price,
+				'category_name': cate.category_name if cate else None,
+				'maximum_discount': pro.maximum_discount,
+				'maximum_discount_price': pro.maximum_discount_price,
+				'channel_cost': pro.channel_cost,
+				'created_at': pro.created_at,
+				'status': pro.status
+			}
+			pros.append(obj)
+
 		log_activity(
 			db=db,
-			request= logRequest,
-			user_id= current_user['user_id'],
-			description= "Get all products by role and type",
-			target_type= "Product"
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all products by role and type",
+			target_type="Product"
 		)
+
 		return {
-			'mess': 'Get products successfully !',
-			'status_code' : status.HTTP_200_OK,
+			'mess': 'Get products successfully!',
+			'status_code': status.HTTP_200_OK,
 			'data': pros
 		}
 	except Exception as ex:
@@ -352,47 +376,55 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 
 # User required
 # This function is used for user who log-in into our website and with their role
-async def get_products_by_category_and_role(db: Session, category_id: int, logRequest: Request, current_user : dict):
+async def get_products_by_category_and_role(db: Session, category_id: int, logRequest: Request, current_user: dict):
 	try:
 		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
 		if not permission:
 			return {
-				'mess' : "You don't have permission for accessing this function !",
-				'status_code' : status.HTTP_403_FORBIDDEN 
+				'mess': "You don't have permission for accessing this function!",
+				'status_code': status.HTTP_403_FORBIDDEN
 			}
-		products = db.query(Product).filter(Product.product_role == current_user['role_id']).all()
+
+		products = db.query(Product).options(
+			joinedload(Product.category)
+		).filter(
+			Product.product_role == current_user['role_id'],
+			Product.category_id == category_id,
+			Product.status != 'inactive'
+		).all()
+
+		cate = get_category_or_404(db, category_id)
+
 		pros = []
 		for pro in products:
-			cate = get_category_or_404(db, category_id)
-			if pro.status == 'inactive':
-				continue
-			if pro.category_id == category_id:
-				obj = {
-					'product_id' : pro.product_id,
-					'product_name' : pro.product_name,
-					'sku_partnumber' : pro.sku_partnumber,
-					'product_role' : pro.product_role,
-					'description' : pro.description,
-					'price' : pro.price,
-					'category_name': cate.category_name,
-					'maximum_discount' : pro.maximum_discount,
-					'maximum_discount_price' : pro.maximum_discount_price,
-					'channel_cost' : pro.channel_cost,
-					'created_at' : pro.created_at,
-					'status' : pro.status
-				}
-				pros.append(obj)
+			obj = {
+				'product_id': pro.product_id,
+				'product_name': pro.product_name,
+				'sku_partnumber': pro.sku_partnumber,
+				'product_role': pro.product_role,
+				'description': pro.description,
+				'price': pro.price,
+				'category_name': cate.category_name,
+				'maximum_discount': pro.maximum_discount,
+				'maximum_discount_price': pro.maximum_discount_price,
+				'channel_cost': pro.channel_cost,
+				'created_at': pro.created_at,
+				'status': pro.status
+			}
+			pros.append(obj)
+
 		log_activity(
 			db=db,
-			request= logRequest,
-			user_id= current_user['user_id'],
-			description= "Get all products by category and role",
-			target_type= "Product"
+			request=logRequest,
+			user_id=current_user['user_id'],
+			description="Get all products by category and role",
+			target_type="Product"
 		)
+
 		return {
-			'mess' : 'Get products by role and category sucessfully !',
-			'satus_code' : status.HTTP_200_OK,
-			'data' : pros
+			'mess': 'Get products by role and category successfully!',
+			'status_code': status.HTTP_200_OK,
+			'data': pros
 		}
 	except Exception as ex:
 		return get_internal_server_error(ex)

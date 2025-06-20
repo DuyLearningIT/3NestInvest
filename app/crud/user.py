@@ -235,7 +235,13 @@ async def get_my_info(db: Session, current_user: dict, request: Request):
 		return{
 			'mess' : 'Get user successfully !',
 			'status_code' : status.HTTP_200_OK,
-			'data' : user
+			'data' : {
+				'user_name': user.user_name,
+				'user_email': user.user_email,
+				'company_name': user.company_name,
+				'created_at' : user.created_at,
+				'phone': user.phone
+			}
 		}
 	except Exception as ex:
 		return get_internal_server_error(ex)

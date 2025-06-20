@@ -13,7 +13,7 @@ class ActivityLog(Base):
 	ip = Column(String(255))
 	agent = Column(String(255))
 	location = Column(String(255))
-	created_at = Column(DateTime, default = datetime.utcnow)
+	created_at = Column(DateTime, default = datetime.now)
 
 	# relationship
 	user = relationship('User', back_populates='activity_logs')
