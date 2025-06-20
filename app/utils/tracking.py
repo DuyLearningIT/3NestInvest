@@ -18,7 +18,12 @@ def log_activity(
     description: str,
     target_type: str
 ) -> None:
-    ip = request.client.host
+    x_forwarded_for = request.headers.get("x-forwarded-for")
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.client.host
+
     agent = request.headers.get("user-agent", "Unknown")
     location = get_location(ip)
 

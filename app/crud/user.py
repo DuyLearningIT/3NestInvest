@@ -32,7 +32,7 @@ async def get_user(db: Session, user_id : int, current_user: dict, request: Requ
 			request= request,
 			user_id= current_user['user_id'],
 			description= f"Get user by id",
-			target_type= f"Session: {datetime.now()}"
+			target_type= f"User"
 		)
 		user = get_user_or_404(db, user_id)
 		return {
@@ -112,7 +112,7 @@ async def login(db: Session, user: UserLogin, request: Request):
 			request= request,
 			user_id= check.user_id,
 			description= f"User logged in",
-			target_type= "User"
+			target_type= f"Session: {datetime.now()}"
 		)
 		return {
 			'mess' : 'Login successfully !',
@@ -236,6 +236,7 @@ async def get_my_info(db: Session, current_user: dict, request: Request):
 			'mess' : 'Get user successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data' : {
+				'user_id': user.user_id,
 				'user_name': user.user_name,
 				'user_email': user.user_email,
 				'company_name': user.company_name,
