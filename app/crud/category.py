@@ -25,7 +25,7 @@ async def create_category(db: Session, request : CreateCategory, logRequest: Req
 		new_cat = Category(
 			category_name = request.category_name,
 			type_id = request.type_id,
-			description = request.description
+			category_description = request.category_description
 		)
 		db.add(new_cat)
 		db.commit()
@@ -34,7 +34,7 @@ async def create_category(db: Session, request : CreateCategory, logRequest: Req
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Create category",
+			activity_description= "Create category",
 			target_type= "Category"
 		)
 		return {
@@ -43,7 +43,7 @@ async def create_category(db: Session, request : CreateCategory, logRequest: Req
 			'data': {
 				'category_id' : new_cat.category_id,
 				'category_name' : new_cat.category_name,
-				'description' : new_cat.description,
+				'description' : new_cat.category_description,
 				'created_at' : new_cat.created_at
 			}
 		}
@@ -62,7 +62,7 @@ async def get_categories(db: Session, logRequest: Request, current_user: dict):
             obj = {
                 'category_id': cate.category_id,
                 'category_name': cate.category_name,
-                'description': cate.description,
+                'description': cate.category_description,
                 'type_name': type_.type_name
             }
             categories.append(obj)
@@ -70,7 +70,7 @@ async def get_categories(db: Session, logRequest: Request, current_user: dict):
             db=db,
             request= logRequest,
             user_id= current_user['user_id'],
-            description= "Get all categories",
+            activity_description= "Get all categories",
             target_type= "Category"
         )
         return {
@@ -95,7 +95,7 @@ async def get_category(db: Session, category_id: int, logRequest: Request, curre
             db=db,
             request=logRequest,
             user_id=current_user['user_id'],
-            description="Get a category",
+            activity_description="Get a category",
             target_type="Category"
         )
 
@@ -105,7 +105,7 @@ async def get_category(db: Session, category_id: int, logRequest: Request, curre
             'data': {
                 'category_id': cate.category_id,
                 'category_name': cate.category_name,
-                'description': cate.description,
+                'description': cate.category_description,
                 'type_id': cate.type_id,
                 'type_name': cate.tb_type.type_name if cate.tb_type else None
             }
@@ -124,7 +124,7 @@ async def update_category(db: Session, request: UpdateCategory, logRequest: Requ
 			}
 		cate = get_category_or_404(db, request.category_id)
 		cate.category_name = request.category_name or cate.category_name
-		cate.description = request.description or request.description
+		cate.description = request.category_description or request.category_description
 		cate.type_id = request.type_id or cate.type_id
 		cate.updated_at = datetime.now()
 		cate.updated_by = current_user['user_name']
@@ -134,7 +134,7 @@ async def update_category(db: Session, request: UpdateCategory, logRequest: Requ
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Update a category",
+			activity_description= "Update a category",
 			target_type= "Category"
 		)
 		return {
@@ -142,7 +142,7 @@ async def update_category(db: Session, request: UpdateCategory, logRequest: Requ
 			'status_code' : status.HTTP_200_OK,
 			'data' : {
 				'category_name' : cate.category_name,
-				'description' : cate.description,
+				'description' : cate.category_description,
 				'type_id' : cate.type_id
 			}
 		}
@@ -165,7 +165,7 @@ async def delete_category(db: Session, category_id: int, logRequest: Request, cu
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Delete a category",
+			activity_description= "Delete a category",
 			target_type= "Category"
 		)
 		return {
@@ -190,7 +190,7 @@ async def get_categories_by_type(db: Session, type_id: int, logRequest: Request,
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get all categories by type",
+			activity_description= "Get all categories by type",
 			target_type= "Category"
 		)
 		return{

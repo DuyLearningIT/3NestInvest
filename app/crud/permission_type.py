@@ -22,7 +22,7 @@ async def create_permission_type(db: Session, request: PermissionTypeCreate, cur
 			}
 		data = PermissionType(
 			permission_type_name = request.permission_type_name,
-			description = request.description
+			permission_type_description = request.permission_type_description
 		)
 		db.add(data)
 		db.commit()
@@ -56,7 +56,7 @@ async def update_permission_type(db: Session, request: PermissionTypeUpdate, cur
 			}
 		check = get_permission_type_or_404(db, request.permission_type_id)
 		check.permission_type_name = request.permission_type_name or check.permission_type_name
-		check.description = request.description or check.description
+		check.permission_type_description = request.permission_type_description or check.permission_type_description
 		check.updated_at = datetime.utcnow()
 		
 		db.commit()

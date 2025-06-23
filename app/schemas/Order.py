@@ -12,7 +12,7 @@ class OrderCreate(BaseModel):
 	order_title : str
 	status: str | None = 'draft'
 	details: List[OrderDetailCreate]
-	description: str | None = None
+	order_description: str | None = None
 
 class OrderUpdate(BaseModel):
 	order_id : int

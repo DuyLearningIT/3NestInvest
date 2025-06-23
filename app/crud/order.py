@@ -74,7 +74,7 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Create order",
+			activity_description= "Create order",
 			target_type= "Order"
 		)
 		return {
@@ -95,7 +95,7 @@ async def get_order(db: Session, order_id : int, logRequest: Request, current_us
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get order by id",
+			activity_description= "Get order by id",
 			target_type= "Order"
 		)
 		return {
@@ -136,7 +136,7 @@ async def update_order(db: Session, request: OrderUpdate, logRequest: Request, c
 				db=db,
 				request= logRequest,
 				user_id= current_user['user_id'],
-				description= "Update order",
+				activity_description= "Update order",
 				target_type= "Order"
 			)
 			return {
@@ -170,7 +170,7 @@ async def change_status_of_order(db: Session, request: OrderApprove, logRequest:
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Review order",
+			activity_description= "Review order",
 			target_type= "Order"
 		)
 		return {
@@ -203,7 +203,7 @@ async def get_order_details_by_order(db: Session, order_id: int, logRequest: Req
                 'product_id': product.product_id,
                 'product_name': product.product_name,
                 'sku_partnumber': product.sku_partnumber,
-                'description': product.description,
+                'description': product.product_description,
                 'price_for_customer': detail.price_for_customer,
                 'quantity': detail.quantity,
                 'service_contract_duration': detail.service_contract_duration,
@@ -216,7 +216,7 @@ async def get_order_details_by_order(db: Session, order_id: int, logRequest: Req
             db=db,
             request=logRequest,
             user_id=current_user['user_id'],
-            description="Get order details by order",
+            activity_description="Get order details by order",
             target_type="Order"
         )
 
@@ -257,7 +257,7 @@ async def delete_order(db: Session, order_id: int, logRequest: Request, current_
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Delete order",
+			activity_description= "Delete order",
 			target_type= "Order"
 		)
 		return {
@@ -282,7 +282,7 @@ async def get_orders_by_deal(db: Session, deal_id: int, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get orders by deal",
+			activity_description= "Get orders by deal",
 			target_type= "Order"
 		)
 		return {
@@ -327,7 +327,7 @@ async def get_orders_by_user(db: Session, logRequest: Request, current_user: dic
             db=db,
             request=logRequest,
             user_id=current_user['user_id'],
-            description="Get orders by user",
+            activity_description="Get orders by user",
             target_type="Order"
         )
 
@@ -342,7 +342,7 @@ async def get_orders_by_user(db: Session, logRequest: Request, current_user: dic
 # High-level required
 async def get_orders(db: Session, logRequest: Request, current_user: dict):
     try:
-        orders = db.query(Order).options(joinedload(Order.deal)).filter(Order.status != 'draft').all()
+        orders = db.query(Order).options(joinedload(Order.deal)).all()
         ods = []
         for order in orders:
             deal = order.deal  
@@ -364,7 +364,7 @@ async def get_orders(db: Session, logRequest: Request, current_user: dict):
             db=db,
             request=logRequest,
             user_id=current_user['user_id'],
-            description="Get all orders",
+            activity_description="Get all orders",
             target_type="Order"
         )
 
@@ -396,22 +396,21 @@ async def get_orders_by_role(db: Session, role_id: int, logRequest: Request, cur
             user = deal.user
             if user and user.role_id == role_id:
                 for order in deal.orders:
-                    if order.status != 'draft':
-                        ods.append({
-                            'order_id': order.order_id,
-                            'order_title': order.order_title,
-                            'customer_name': deal.customer_name,
-                            'user_email': user.user_email,
-                            'created_at': order.created_at,
-                            'total_budget': order.total_budget,
-                            'status': order.status
-                        })
+                    ods.append({
+                        'order_id': order.order_id,
+                        'order_title': order.order_title,
+                        'customer_name': deal.customer_name,
+                        'user_email': user.user_email,
+                        'created_at': order.created_at,
+                        'total_budget': order.total_budget,
+                        'status': order.status
+                    })
 
         log_activity(
             db=db,
             request=logRequest,
             user_id=current_user['user_id'],
-            description="Get orders by role",
+            activity_description="Get orders by role",
             target_type="Order"
         )
 

@@ -24,7 +24,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 		cate = get_category_or_404(db, request.category_id)
 		new_pro = Product(
 			product_name = request.product_name,
-			description = request.description,
+			permission_description = request.permission_description,
 			sku_partnumber = request.sku_partnumber,
 			price = request.price,
 			maximum_discount = request.maximum_discount,
@@ -40,7 +40,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Create product",
+			activity_description= "Create product",
 			target_type= "Product"
 		)
 		return {
@@ -50,7 +50,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 				'product_id' : new_pro.product_id,
 				'product_name' : new_pro.product_name,
 				'sku_partnumber' : new_pro.sku_partnumber,
-				'description' : new_pro.description,
+				'description' : new_pro.permission_description,
 				'price' : new_pro.price,
 				'product_role' : new_pro.product_role,
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
@@ -83,7 +83,7 @@ async def get_products(db: Session, logRequest: Request, current_user: dict):
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.description,
+				'description': pro.permission_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'type_name': type_.type_name if type_ else None,
@@ -98,7 +98,7 @@ async def get_products(db: Session, logRequest: Request, current_user: dict):
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all products",
+			activity_description="Get all products",
 			target_type="Product"
 		)
 
@@ -119,7 +119,7 @@ async def get_product(db: Session, product_id : int, logRequest: Request, curren
 				db=db,
 				request= logRequest,
 				user_id= current_user['user_id'],
-				description= "Get product by id",
+				activity_description= "Get product by id",
 				target_type= "Product"
 		)
 		return {
@@ -130,7 +130,7 @@ async def get_product(db: Session, product_id : int, logRequest: Request, curren
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
-				'description' : pro.description,
+				'description' : pro.permission_description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
@@ -162,7 +162,7 @@ async def update_product(db: Session, request : UpdateProduct, logRequest: Reque
 		pro = get_product_or_404(db, request.product_id)
 		pro.product_name = request.product_name or pro.product_name
 		pro.category_id = request.category_id or pro.category_id
-		pro.description = request.description or pro.description
+		pro.permission_description = request.permission_description or pro.permission_description
 		pro.sku_partnumber = request.sku_partnumber or pro.sku_partnumber
 		pro.price = request.price or pro.price
 		pro.maximum_discount = request.maximum_discount or pro.maximum_discount
@@ -177,7 +177,7 @@ async def update_product(db: Session, request : UpdateProduct, logRequest: Reque
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Update product",
+			activity_description= "Update product",
 			target_type= "Product"
 		)
 		return {
@@ -193,7 +193,7 @@ async def get_products_by_category(db: Session, category_id: int, logRequest: Re
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get all products by category",
+			activity_description= "Get all products by category",
 			target_type= "Product"
 		)
 		return {
@@ -202,7 +202,7 @@ async def get_products_by_category(db: Session, category_id: int, logRequest: Re
 			'data' : db.query(Product).options(load_only(
 					Product.product_id, 
 					Product.product_name, 
-					Product.description,
+					Product.permission_description,
 					Product.category_id, 
 					Product.price, 
 					Product.sku_partnumber, 
@@ -236,7 +236,7 @@ async def get_products_by_type(db: Session, type_id: int, logRequest: Request, c
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all products by type",
+			activity_description="Get all products by type",
 			target_type="Product"
 		)
 
@@ -264,7 +264,7 @@ async def delete_product(db: Session, product_id : int, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Delete product",
+			activity_description= "Delete product",
 			target_type= "Product"
 		)
 		return {
@@ -291,7 +291,7 @@ async def get_products_by_role(db: Session, logRequest: Request, current_user: d
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.description,
+				'description': pro.permission_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -306,7 +306,7 @@ async def get_products_by_role(db: Session, logRequest: Request, current_user: d
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all products by role",
+			activity_description="Get all products by role",
 			target_type="Product"
 		)
 
@@ -347,7 +347,7 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.description,
+				'description': pro.permission_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -362,7 +362,7 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all products by role and type",
+			activity_description="Get all products by role and type",
 			target_type="Product"
 		)
 
@@ -402,7 +402,7 @@ async def get_products_by_category_and_role(db: Session, category_id: int, logRe
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.description,
+				'description': pro.permission_description,
 				'price': pro.price,
 				'category_name': cate.category_name,
 				'maximum_discount': pro.maximum_discount,
@@ -417,7 +417,7 @@ async def get_products_by_category_and_role(db: Session, category_id: int, logRe
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all products by category and role",
+			activity_description="Get all products by category and role",
 			target_type="Product"
 		)
 

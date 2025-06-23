@@ -3,7 +3,7 @@ from typing import List
 
 class DealCreate(BaseModel):
 	deal_type : str
-	description : str | None = None
+	deal_description : str | None = None
 	tax_indentification_number : str 
 	customer_name : str 
 	domain_name: str | None = None 
@@ -17,7 +17,7 @@ class DealCreate(BaseModel):
 class DealUpdate(BaseModel):
 	deal_id: int
 	deal_type : str | None = None
-	description : str | None = None
+	deal_description : str | None = None
 	user_id : int | None = 0
 	tax_indentification_number : str | None = None 
 	customer_name : str  | None = None

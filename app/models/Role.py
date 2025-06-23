@@ -8,7 +8,7 @@ class Role(Base):
 
 	role_id = Column(Integer, primary_key = True, index = True)
 	role_name = Column(String(100), unique = True, nullable = True)
-	description = Column(String(255))
+	role_description = Column(String(255))
 	created_at = Column(DateTime, default = datetime.utcnow)
 	created_by = Column(String(50), default='admin')
 	updated_at = Column(DateTime)

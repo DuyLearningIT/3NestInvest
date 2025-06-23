@@ -8,7 +8,7 @@ class Deal(Base):
 
 	deal_id = Column(Integer, primary_key=True, index=True)
 	deal_type = Column(String(50))
-	description = Column(String(255))
+	deal_description = Column(String(255))
 	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
 	tax_indentification_number = Column(String(50))
 	customer_name = Column(String(100))

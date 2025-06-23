@@ -15,7 +15,7 @@ def log_activity(
     db: Session,
     request: Request,
     user_id: int,
-    description: str,
+    activity_description: str,
     target_type: str
 ) -> None:
     x_forwarded_for = request.headers.get("x-forwarded-for")
@@ -29,7 +29,7 @@ def log_activity(
 
     log = ActivityLog(
         user_id=user_id,
-        description=description,
+        activity_description=activity_description,
         target_type=target_type,
         ip=ip,
         agent=agent,

@@ -14,7 +14,7 @@ async def get_users(db: Session, current_user: dict, request: Request):
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= f"Get all users",
+			activity_description= f"Get all users",
 			target_type= "User"
 		)
 		return {
@@ -31,7 +31,7 @@ async def get_user(db: Session, user_id : int, current_user: dict, request: Requ
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= f"Get user by id",
+			activity_description= f"Get user by id",
 			target_type= f"User"
 		)
 		user = get_user_or_404(db, user_id)
@@ -76,7 +76,7 @@ async def create_user(db: Session, user: UserCreate, current_user: dict, request
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= f"Create an user",
+			activity_description= f"Create an user",
 			target_type= "User"
 		)
 		return {
@@ -111,7 +111,7 @@ async def login(db: Session, user: UserLogin, request: Request):
 			db=db,
 			request= request,
 			user_id= check.user_id,
-			description= f"User logged in",
+			activity_description= f"User logged in",
 			target_type= f"Session: {datetime.now()}"
 		)
 		return {
@@ -149,7 +149,7 @@ async def update_user(db: Session, user: UserUpdate, current_user: dict, request
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= "Update user",
+			activity_description= "Update user",
 			target_type= "User"
 		)
 		return {
@@ -187,7 +187,7 @@ async def change_passowrd(db: Session, user: UserChangePassword, request: Reques
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= "Change password",
+			activity_description= "Change password",
 			target_type= "User"
 		)
 		return {
@@ -212,7 +212,7 @@ async def delete_user (db: Session, user_id: int, current_user: dict, request: R
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= "Delete user",
+			activity_description= "Delete user",
 			target_type= "User"
 		)
 		return {
@@ -229,7 +229,7 @@ async def get_my_info(db: Session, current_user: dict, request: Request):
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= "Get user's information",
+			activity_description= "Get user's information",
 			target_type= "User"
 		)
 		return{
@@ -314,7 +314,7 @@ async def get_users_by_role(db: Session, role_id: int, request: Request):
 			db=db,
 			request= request,
 			user_id= current_user['user_id'],
-			description= "Get users by role",
+			activity_description= "Get users by role",
 			target_type= "User"
 		)
 		return {

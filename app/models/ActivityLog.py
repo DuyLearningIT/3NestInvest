@@ -8,7 +8,7 @@ class ActivityLog(Base):
 
 	activity_log_id = Column(Integer, index = True, primary_key = True)
 	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
-	description = Column(String(255))
+	activity_description = Column(String(255))
 	target_type = Column(String(100), nullable = False)
 	ip = Column(String(255))
 	agent = Column(String(255))

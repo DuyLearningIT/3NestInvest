@@ -10,7 +10,7 @@ class Product(Base):
 	product_name = Column(String(255), unique=True, nullable=False)
 	product_role = Column(Integer, ForeignKey('tb_role.role_id'), nullable=False)
 	category_id = Column(Integer, ForeignKey('tb_category.category_id'), nullable=False)
-	description = Column(String(255))
+	product_description = Column(String(255))
 	sku_partnumber = Column(String(100)) # It's a kind of product number
 	price = Column(Float, nullable=False)
 	channel_cost = Column(Float, default= 0) # This means how much money does the business have to pay for us

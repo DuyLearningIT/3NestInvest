@@ -24,7 +24,7 @@ async def create_role(db: Session, request: RoleCreate, logRequest: Request, cur
         
         role = Role(
             role_name=request.role_name,
-            description=request.description
+            role_description=request.role_description
         )
         db.add(role)
         db.flush()  
@@ -63,7 +63,7 @@ async def create_role(db: Session, request: RoleCreate, logRequest: Request, cur
                 {
                     'permission_id': rp.permission.permission_id,
                     'permission_name': rp.permission.permission_name,
-                    'description': rp.permission.description
+                    'description': rp.permission.role_description
                 }
                 for rp in role_with_permissions.role_permission
             ], key=lambda x: x['permission_id'])
@@ -71,7 +71,7 @@ async def create_role(db: Session, request: RoleCreate, logRequest: Request, cur
         role_data = {
             'role_id': role_with_permissions.role_id,
             'role_name': role_with_permissions.role_name,
-            'description': role_with_permissions.description,
+            'description': role_with_permissions.role_description,
             'created_at': role_with_permissions.created_at,
             'created_by': role_with_permissions.created_by,
             'permissions': permissions_data
@@ -80,7 +80,7 @@ async def create_role(db: Session, request: RoleCreate, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Create role",
+			activity_description= "Create role",
 			target_type= "Role"
 		)
         
@@ -100,7 +100,7 @@ async def get_roles(db: Session, logRequest: Request, current_user: dict):
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get roles",
+			activity_description= "Get roles",
 			target_type= "Role"
 		)
         return {
@@ -146,7 +146,7 @@ async def get_role(db: Session, role_id: int, logRequest: Request, current_user:
         role_data = {
             'role_id': role.role_id,
             'role_name': role.role_name,
-            'description': role.description,
+            'description': role.role_description,
             'created_at': role.created_at,
             'created_by': role.created_by,
             'updated_at': role.updated_at,
@@ -157,7 +157,7 @@ async def get_role(db: Session, role_id: int, logRequest: Request, current_user:
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get role by id",
+			activity_description= "Get role by id",
 			target_type= "Role"
 		)
         return {
@@ -198,8 +198,8 @@ async def update_role(db: Session, request: RoleUpdate, logRequest: Request, cur
         
         if request.role_name is not None:
             role.role_name = request.role_name
-        if request.description is not None:
-            role.description = request.description
+        if request.role_description is not None:
+            role.role_description = request.role_description
         
         role.updated_at = datetime.utcnow()
         role.updated_by = current_user['user_name']  
@@ -241,7 +241,7 @@ async def update_role(db: Session, request: RoleUpdate, logRequest: Request, cur
                 {
                     'permission_id': rp.permission.permission_id,
                     'permission_name': rp.permission.permission_name,
-                    'description': rp.permission.description
+                    'description': rp.permission.permission_description
                 }
                 for rp in updated_role.role_permission
             ], key=lambda x: x['permission_id'])
@@ -249,7 +249,7 @@ async def update_role(db: Session, request: RoleUpdate, logRequest: Request, cur
         role_data = {
             'role_id': updated_role.role_id,
             'role_name': updated_role.role_name,
-            'description': updated_role.description,
+            'description': updated_role.role_description,
             'created_at': updated_role.created_at,
             'created_by': updated_role.created_by,
             'updated_at': updated_role.updated_at,
@@ -260,7 +260,7 @@ async def update_role(db: Session, request: RoleUpdate, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Update role",
+			activity_description= "Update role",
 			target_type= "Role"
 		)
         return {
@@ -302,7 +302,7 @@ async def delete_role(db: Session, role_id: int, logRequest: Request, current_us
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Delete role",
+			activity_description= "Delete role",
 			target_type= "Role"
 		)
         return {

@@ -14,7 +14,7 @@ async def get_deals(db: Session, logRequest: Request, current_user:dict):
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get all deals",
+			activity_description= "Get all deals",
 			target_type= "Deal"
 		)
 		return {
@@ -36,7 +36,7 @@ async def get_deal(db: Session, deal_id : int, logRequest: Request, current_user
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get deal by id",
+			activity_description= "Get deal by id",
 			target_type= "Deal"
 		)
 		return {
@@ -80,7 +80,7 @@ async def create_deal(db: Session, request: DealCreate, logRequest: Request, cur
 			)
 		new_deal = Deal(
 			deal_type=request.deal_type,
-			description=request.description,
+			deal_description=request.deal_description,
 			user_id= user.user_id,
 			tax_indentification_number=request.tax_indentification_number,
 			customer_name=request.customer_name,
@@ -100,7 +100,7 @@ async def create_deal(db: Session, request: DealCreate, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Create a deal",
+			activity_description= "Create a deal",
 			target_type= "Deal"
 		)
 		return{
@@ -129,7 +129,7 @@ async def update_deal(db: Session, request: DealUpdate, logRequest: Request, cur
 				status_code = status.HTTP_400_BAD_REQUEST
 			)
 		deal.deal_type = request.deal_type or deal.deal_type
-		deal.description = request.description or deal.description
+		deal.deal_description = request.deal_description or deal.deal_description
 		deal.tax_indentification_number = request.tax_indentification_number or deal.tax_indentification_number
 		deal.customer_name = request.customer_name or deal.customer_name
 		deal.domain_name = request.domain_name or deal.domain_name
@@ -148,7 +148,7 @@ async def update_deal(db: Session, request: DealUpdate, logRequest: Request, cur
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Update a deal",
+			activity_description= "Update a deal",
 			target_type= "Deal"
 		)
 		return {
@@ -181,7 +181,7 @@ async def delete_deal(db: Session, deal_id : int, logRequest: Request, current_u
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Delete a deal",
+			activity_description= "Delete a deal",
 			target_type= "Deal"
 		)
 		return {
@@ -209,7 +209,7 @@ async def change_status_of_deal(db: Session, request : DealApprove, logRequest: 
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Review a deal",
+			activity_description= "Review a deal",
 			target_type= "Deal"
 		)
 		return {
@@ -228,7 +228,7 @@ async def get_deals_by_user(db: Session, logRequest: Request, current_user: dict
 			db=db,
 			request= logRequest,
 			user_id= current_user['user_id'],
-			description= "Get all deals  by user",
+			activity_description= "Get all deals  by user",
 			target_type= "Deal"
 		)
 		return {
@@ -256,7 +256,7 @@ async def get_deals_by_role(db: Session, role_id: int, logRequest: Request, curr
 			db=db,
 			request=logRequest,
 			user_id=current_user['user_id'],
-			description="Get all deals by role",
+			activity_description="Get all deals by role",
 			target_type="Deal"
 		)
 

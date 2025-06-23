@@ -22,7 +22,7 @@ async def create_permission(db: Session, request: PermissionCreate):
         
         permission = Permission(
             permission_name=request.permission_name,
-            description=request.description,
+            permission_description=request.permission_description,
             permission_type_id=request.permission_type_id
         )
         
@@ -40,7 +40,7 @@ async def create_permission(db: Session, request: PermissionCreate):
         permission_data = {
             'permission_id': permission_with_type.permission_id,
             'permission_name': permission_with_type.permission_name,
-            'description': permission_with_type.description,
+            'description': permission_with_type.permission_description,
             'permission_type_id': permission_with_type.permission_type_id,
             'permission_type_name': permission_with_type.permission_type.permission_type_name,
             'created_at': permission_with_type.created_at,
@@ -68,7 +68,7 @@ async def get_permissions(db: Session):
             {
                 'permission_id': perm.permission_id,
                 'permission_name': perm.permission_name,
-                'description': perm.description,
+                'description': perm.permission_description,
                 'permission_type_id': perm.permission_type_id,
                 'permission_type_name': perm.permission_type.permission_type_name,
                 'created_at': perm.created_at,
@@ -106,7 +106,7 @@ async def get_permission(db: Session, request_id):
         permission_data = {
             'permission_id': permission.permission_id,
             'permission_name': permission.permission_name,
-            'description': permission.description,
+            'description': permission.permission_description,
             'permission_type_id': permission.permission_type_id,
             'permission_type_name': permission.permission_type.permission_type_name,
             'created_at': permission.created_at,
@@ -143,7 +143,7 @@ async def get_permissions_by_type(db: Session, request_id):
             {
                 'permission_id': perm.permission_id,
                 'permission_name': perm.permission_name,
-                'description': perm.description,
+                'description': perm.permission_description,
                 'permission_type_id': perm.permission_type_id,
                 'permission_type_name': perm.permission_type.permission_type_name,
                 'created_at': perm.created_at,
@@ -200,8 +200,8 @@ async def update_permission(db: Session, request: PermissionUpdate):
         
         if request.permission_name:
             permission.permission_name = request.permission_name
-        if request.description:
-            permission.description = request.description
+        if request.permission_description:
+            permission.permission_description = request.permission_description
         if request.permission_type_id:
             permission.permission_type_id = request.permission_type_id
         permission.updated_at = datetime.now()
@@ -220,7 +220,7 @@ async def update_permission(db: Session, request: PermissionUpdate):
         permission_data = {
             'permission_id': updated_permission.permission_id,
             'permission_name': updated_permission.permission_name,
-            'description': updated_permission.description,
+            'description': updated_permission.permission_description,
             'permission_type_id': updated_permission.permission_type_id,
             'permission_type_name': updated_permission.permission_type.permission_type_name,
             'created_at': updated_permission.created_at,
