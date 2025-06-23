@@ -106,7 +106,9 @@ async def create_deal(db: Session, request: DealCreate, logRequest: Request, cur
 		return{
 			'mess' : 'Create deal successfully !',
 			'status_code': status.HTTP_201_CREATED,
-			'data': new_deal
+			'data': {
+				'deal_id' : new_deal.deal_id
+			}
 		}
 	except Exception as ex:
 		db.rollback()
