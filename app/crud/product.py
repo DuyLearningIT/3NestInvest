@@ -24,7 +24,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 		cate = get_category_or_404(db, request.category_id)
 		new_pro = Product(
 			product_name = request.product_name,
-			permission_description = request.permission_description,
+			product_description = request.product_description,
 			sku_partnumber = request.sku_partnumber,
 			price = request.price,
 			maximum_discount = request.maximum_discount,
@@ -50,7 +50,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 				'product_id' : new_pro.product_id,
 				'product_name' : new_pro.product_name,
 				'sku_partnumber' : new_pro.sku_partnumber,
-				'description' : new_pro.permission_description,
+				'description' : new_pro.product_description,
 				'price' : new_pro.price,
 				'product_role' : new_pro.product_role,
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
@@ -83,7 +83,7 @@ async def get_products(db: Session, logRequest: Request, current_user: dict):
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.permission_description,
+				'description': pro.product_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'type_name': type_.type_name if type_ else None,
@@ -130,7 +130,7 @@ async def get_product(db: Session, product_id : int, logRequest: Request, curren
 				'product_name' : pro.product_name,
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
-				'description' : pro.permission_description,
+				'description' : pro.product_description,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
@@ -162,7 +162,7 @@ async def update_product(db: Session, request : UpdateProduct, logRequest: Reque
 		pro = get_product_or_404(db, request.product_id)
 		pro.product_name = request.product_name or pro.product_name
 		pro.category_id = request.category_id or pro.category_id
-		pro.permission_description = request.permission_description or pro.permission_description
+		pro.product_description = request.product_description or pro.product_description
 		pro.sku_partnumber = request.sku_partnumber or pro.sku_partnumber
 		pro.price = request.price or pro.price
 		pro.maximum_discount = request.maximum_discount or pro.maximum_discount
@@ -202,7 +202,7 @@ async def get_products_by_category(db: Session, category_id: int, logRequest: Re
 			'data' : db.query(Product).options(load_only(
 					Product.product_id, 
 					Product.product_name, 
-					Product.permission_description,
+					Product.product_description,
 					Product.category_id, 
 					Product.price, 
 					Product.sku_partnumber, 
@@ -291,7 +291,7 @@ async def get_products_by_role(db: Session, logRequest: Request, current_user: d
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.permission_description,
+				'description': pro.product_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -347,7 +347,7 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.permission_description,
+				'description': pro.product_description,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -402,7 +402,7 @@ async def get_products_by_category_and_role(db: Session, category_id: int, logRe
 				'product_name': pro.product_name,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
-				'description': pro.permission_description,
+				'description': pro.product_description,
 				'price': pro.price,
 				'category_name': cate.category_name,
 				'maximum_discount': pro.maximum_discount,
