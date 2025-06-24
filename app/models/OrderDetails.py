@@ -7,7 +7,7 @@ class OrderDetails(Base):
 
     order_details_id = Column(Integer, primary_key=True, index = True)
     order_id = Column(Integer, ForeignKey("tb_order.order_id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("tb_product.product_id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("tb_product.product_id", ondelete='CASCADE'), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
     price_for_customer = Column(Float, default = 0)
     final_price = Column(Float, default = 0)

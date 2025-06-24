@@ -7,7 +7,7 @@ class ActivityLog(Base):
 	__tablename__ = 'tb_activity_log'
 
 	activity_log_id = Column(Integer, index = True, primary_key = True)
-	user_id = Column(Integer, ForeignKey('tb_user.user_id'), nullable=False)
+	user_id = Column(Integer, ForeignKey('tb_user.user_id', ondelete='CASCADE'), nullable=False)
 	activity_description = Column(String(255))
 	target_type = Column(String(100), nullable = False)
 	ip = Column(String(255))

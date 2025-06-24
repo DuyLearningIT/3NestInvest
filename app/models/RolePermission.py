@@ -6,7 +6,7 @@ class RolePermission(Base):
 	__tablename__ = 'tb_role_permission'
 
 	role_permission_id = Column(Integer, primary_key=True, index = True)
-	role_id = Column(Integer, ForeignKey("tb_role.role_id"), nullable=False)
+	role_id = Column(Integer, ForeignKey("tb_role.role_id", ondelete='CASCADE'), nullable=False)
 	permission_id = Column(Integer, ForeignKey("tb_permission.permission_id"), nullable=False)
     
 	# Set relationship

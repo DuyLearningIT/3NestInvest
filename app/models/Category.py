@@ -16,5 +16,5 @@ class Category(Base):
 	updated_by = Column(String(50), default='admin')
 
 	# Set relationship
-	products = relationship("Product", back_populates='category', cascade='all, delete-orphan')
+	products = relationship("Product", back_populates='category', cascade='all, delete-orphan', passive_deletes=True)
 	tb_type = relationship("Type", back_populates='category')

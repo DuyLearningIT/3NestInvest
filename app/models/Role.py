@@ -15,6 +15,6 @@ class Role(Base):
 	updated_by = Column(String(50), default='admin')
 
 	# Set relationship
-	role_permission = relationship('RolePermission', back_populates='role', cascade='all, delete-orphan')
-	users = relationship('User', back_populates= 'role', cascade ='all, delete-orphan')
+	role_permission = relationship('RolePermission', back_populates='role', cascade='all, delete-orphan', passive_deletes=True)
+	users = relationship('User', back_populates= 'role', cascade ='all, delete-orphan', passive_deletes=True)
 	products = relationship('Product', back_populates='role')

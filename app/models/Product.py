@@ -9,7 +9,7 @@ class Product(Base):
 	product_id = Column(Integer, primary_key=True, index=True)
 	product_name = Column(String(255), unique=True, nullable=False)
 	product_role = Column(Integer, ForeignKey('tb_role.role_id'), nullable=False)
-	category_id = Column(Integer, ForeignKey('tb_category.category_id'), nullable=False)
+	category_id = Column(Integer, ForeignKey('tb_category.category_id', ondelete='CASCADE'), nullable=False)
 	product_description = Column(String(255))
 	sku_partnumber = Column(String(100)) # It's a kind of product number
 	price = Column(Float, nullable=False)
@@ -24,5 +24,5 @@ class Product(Base):
 
 	# set relationship
 	category = relationship('Category', back_populates='products')
-	order_details = relationship('OrderDetails', back_populates='product')
+	order_details = relationship('OrderDetails', back_populates='product', passive_deletes=True)
 	role = relationship('Role', back_populates='products')

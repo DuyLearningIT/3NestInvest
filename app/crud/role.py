@@ -63,7 +63,7 @@ async def create_role(db: Session, request: RoleCreate, logRequest: Request, cur
                 {
                     'permission_id': rp.permission.permission_id,
                     'permission_name': rp.permission.permission_name,
-                    'description': rp.permission.role_description
+                    'description': rp.permission.permission_description
                 }
                 for rp in role_with_permissions.role_permission
             ], key=lambda x: x['permission_id'])
