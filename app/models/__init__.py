@@ -11,3 +11,4 @@ from .Permission import Permission
 from .PermissionType import PermissionType
 from .ActivityLog import ActivityLog
 from .RolePermission import RolePermission
+from .ChangeManagement import ChangeManagement

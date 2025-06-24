@@ -236,6 +236,7 @@ async def get_my_info(db: Session, current_user: dict, request: Request):
 			'mess' : 'Get user successfully !',
 			'status_code' : status.HTTP_200_OK,
 			'data' : {
+				'role_id': user.role_id,
 				'user_id': user.user_id,
 				'user_name': user.user_name,
 				'user_email': user.user_email,
