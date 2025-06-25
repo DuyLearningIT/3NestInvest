@@ -28,7 +28,8 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 			deal_id = order.deal_id,
 			order_title=order.order_title,
 			created_by=user.user_name,
-			status = order.status
+			status = order.status,
+			order_description = order.order_description
 		)
 		db.add(db_order)
 		db.commit()
@@ -105,6 +106,7 @@ async def get_order(db: Session, order_id : int, logRequest: Request, current_us
 				'order_id': order.order_id,
 				'deal_id' : order.deal_id,
 				'order_title' : order.order_title,
+				'order_description': order.order_description,
 				'total_budget' : order.total_budget,
 				'status' : order.status,
 				'created_at': order.created_at

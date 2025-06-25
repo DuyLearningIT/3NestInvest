@@ -322,8 +322,9 @@ async def get_products_by_role(db: Session, logRequest: Request, current_user: d
 # Admin required
 async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int, logRequest: Request, current_user: dict):
 	try:
-		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
-		if not permission:
+		permission1 = await check_permission(db, 'view', 'product', current_user['role_id'])
+		permission2 = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		if not permission1 and not permission2:
 			return {
 				'mess': "You don't have permission for accessing this function!",
 				'status_code': status.HTTP_403_FORBIDDEN

@@ -242,7 +242,8 @@ async def get_my_info(db: Session, current_user: dict, request: Request):
 				'user_email': user.user_email,
 				'company_name': user.company_name,
 				'created_at' : user.created_at,
-				'phone': user.phone
+				'phone': user.phone,
+				'status': user.status
 			}
 		}
 	except Exception as ex:
