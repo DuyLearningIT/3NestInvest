@@ -124,7 +124,7 @@ async def update_category(db: Session, request: UpdateCategory, logRequest: Requ
 			}
 		cate = get_category_or_404(db, request.category_id)
 		cate.category_name = request.category_name or cate.category_name
-		cate.description = request.category_description or request.category_description
+		cate.category_description = request.category_description or request.category_description
 		cate.type_id = request.type_id or cate.type_id
 		cate.updated_at = datetime.now()
 		cate.updated_by = current_user['user_name']
@@ -142,7 +142,7 @@ async def update_category(db: Session, request: UpdateCategory, logRequest: Requ
 			'status_code' : status.HTTP_200_OK,
 			'data' : {
 				'category_name' : cate.category_name,
-				'description' : cate.category_description,
+				'category_description' : cate.category_description,
 				'type_id' : cate.type_id
 			}
 		}

@@ -187,8 +187,9 @@ async def change_status_of_order(db: Session, request: OrderApprove, logRequest:
 async def get_order_details_by_order(db: Session, order_id: int, logRequest: Request, current_user: dict):
     try:
         # Check permission
-        permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
-        if not permission:
+        permission1 = await check_permission(db, 'manage', 'order', current_user['role_id'])
+        permission2 = await check_permission(db, 'review', 'order', current_user['role_id'])
+        if not permission1 and not permission2:
             return {
                 'mess': "You don't have permission for accessing this function!",
                 'status_code': status.HTTP_403_FORBIDDEN
@@ -380,12 +381,12 @@ async def get_orders(db: Session, logRequest: Request, current_user: dict):
 # Admin required
 async def get_orders_by_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
     try:
-        permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
-        if not permission:
-            return {
-                'mess': "You don't have permission for accessing this function!",
-                'status_code': status.HTTP_403_FORBIDDEN
-            }
+        # permission = await check_permission(db, 'manage', 'order', current_user['role_id'])
+        # if not permission:
+        #     return {
+        #         'mess': "You don't have permission for accessing this function!",
+        #         'status_code': status.HTTP_403_FORBIDDEN
+        #     }
 
         deals = db.query(Deal) \
             .options(joinedload(Deal.user), joinedload(Deal.orders)) \

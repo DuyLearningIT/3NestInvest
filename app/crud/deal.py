@@ -246,8 +246,9 @@ async def get_deals_by_user(db: Session, logRequest: Request, current_user: dict
 	
 async def get_deals_by_role(db: Session, role_id: int, logRequest: Request, current_user: dict):
 	try:
-		permission = await check_permission(db, 'manage', 'deal', current_user['role_id'])
-		if not permission:
+		permission1 = await check_permission(db, 'manage', 'deal', current_user['role_id'])
+		permission2 = await check_permission(db, 'review', 'deal', current_user['role_id'])
+		if not permission1 and not permission2:
 			return {
 				'mess': "You don't have permission for accessing this function!",
 				'status_code': status.HTTP_403_FORBIDDEN

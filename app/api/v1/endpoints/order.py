@@ -57,10 +57,10 @@ async def delete_order(db: db_depend, order_id: int, logRequest: Request, curren
 	response = await order_crud.delete_order(db, order_id, logRequest, current_user)
 	return response
 
-# Admin required
+# High level required
 @router.get('/get-orders-by-role')
-async def get_orders_by_role(db: db_depend, role_id: int, logRequest: Request, admin= Depends(admin_required)):
-	response = await order_crud.get_orders_by_role(db, role_id, logRequest, admin)
+async def get_orders_by_role(db: db_depend, role_id: int, logRequest: Request, high_level= Depends(high_level_required)):
+	response = await order_crud.get_orders_by_role(db, role_id, logRequest, high_level)
 	return response
 
 # User required
