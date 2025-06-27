@@ -53,6 +53,8 @@ async def get_deal(db: Session, deal_id : int, logRequest: Request, current_user
 					'tax_identification_number': deal.tax_indentification_number,
 					'address': deal.address,
 					'billing_address': deal.billing_address,
+					'description': deal.deal_description,
+					'domain_name' : deal.domain_name,
 					'created_at': deal.created_at.isoformat() if deal.created_at else None,
 					'status': deal.status
 				},

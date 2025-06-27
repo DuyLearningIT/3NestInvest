@@ -7,7 +7,7 @@ class Order(Base):
 	__tablename__ = 'tb_order'
 
 	order_id = Column(Integer, primary_key=True, index=True)
-	deal_id = Column(Integer, ForeignKey('tb_deal.deal_id'), nullable=False)
+	deal_id = Column(Integer, ForeignKey('tb_deal.deal_id', ondelete='CASCADE'), nullable=False)
 	status = Column(String(50), default = 'draft')
 	order_title = Column(String(255))
 	order_description = Column(String(255))

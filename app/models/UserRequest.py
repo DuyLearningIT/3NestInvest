@@ -13,4 +13,3 @@ class UserRequest(Base):
 	company_name = Column(String(255), nullable=False)
 	status = Column(String(100), default='Pending')
 
-

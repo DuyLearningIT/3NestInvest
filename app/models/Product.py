@@ -8,7 +8,7 @@ class Product(Base):
 
 	product_id = Column(Integer, primary_key=True, index=True)
 	product_name = Column(String(255), unique=True, nullable=False)
-	product_role = Column(Integer, ForeignKey('tb_role.role_id'), nullable=False)
+	product_role = Column(Integer, ForeignKey('tb_role.role_id', ondelete='CASCADE'), nullable=False)
 	category_id = Column(Integer, ForeignKey('tb_category.category_id', ondelete='CASCADE'), nullable=False)
 	product_description = Column(String(255))
 	sku_partnumber = Column(String(100)) # It's a kind of product number
