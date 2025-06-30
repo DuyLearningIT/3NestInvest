@@ -15,4 +15,4 @@ class PermissionType(Base):
 	updated_by = Column(String(50), default='admin')
 
 	# Set relationship
-	permissions = relationship("Permission", back_populates='permission_type', cascade='all, delete-orphan')
+	permissions = relationship("Permission", back_populates='permission_type', cascade='all, delete-orphan', passive_deletes=True)

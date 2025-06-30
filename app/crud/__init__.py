@@ -8,3 +8,4 @@ from .deal import *
 from .permission_type import *
 from .permission import get_permissions_by_role
 from .change_management import *
+from .activity import *

@@ -20,6 +20,6 @@ class User(Base):
 	updated_by = Column(String(50), default = 'admin')
 	
 	# set relationship
-	deals = relationship('Deal', back_populates='user', cascade="all, delete-orphan" )
+	deals = relationship('Deal', back_populates='user', cascade="all, delete-orphan", passive_deletes=True)
 	activity_logs = relationship('ActivityLog', back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
 	role = relationship('Role', back_populates='users')

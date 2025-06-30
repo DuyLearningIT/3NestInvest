@@ -15,4 +15,4 @@ class Type(Base):
 	updated_by = Column(String(255))
 
 	# set relationship
-	category = relationship('Category', back_populates='tb_type', cascade="all, delete-orphan")
+	category = relationship('Category', back_populates='tb_type', cascade="all, delete-orphan", passive_deletes=True)

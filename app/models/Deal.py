@@ -27,4 +27,4 @@ class Deal(Base):
 
 	# Set relationship
 	user = relationship('User', back_populates='deals')
-	orders = relationship('Order', back_populates='deal', cascade='all, delete-orphan')
+	orders = relationship('Order', back_populates='deal', cascade='all, delete-orphan', passive_deletes=True)

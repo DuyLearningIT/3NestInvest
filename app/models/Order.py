@@ -20,4 +20,4 @@ class Order(Base):
 
 	# Set relationship
 	deal = relationship('Deal', back_populates='orders')
-	order_details = relationship('OrderDetails', back_populates='order', cascade='all, delete-orphan')
+	order_details = relationship('OrderDetails', back_populates='order', cascade='all, delete-orphan', passive_deletes=True)
