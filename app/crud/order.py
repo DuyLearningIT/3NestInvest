@@ -4,7 +4,7 @@ from app.schemas import OrderCreate, OrderUpdate, OrderApprove
 from fastapi import Depends, Request
 from datetime import datetime
 from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, get_product_or_404, get_order_or_404, log_activity
+from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, get_product_or_404, get_order_or_404, log_activity, send_email, send_email_to_managers
 from app.utils.permission_checking import check_permission
 
 # User required
@@ -34,7 +34,7 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 		db.add(db_order)
 		db.commit()
 		db.refresh(db_order)
-
+		await send_email_to_managers(db, 'New order registration has submitted !')
 		total_budget = 0
 		initial_price = 0
 		for detail in order.details:
@@ -163,11 +163,24 @@ async def change_status_of_order(db: Session, request: OrderApprove, logRequest:
 				'mess' : "You don't have permission for accessing this function !",
 				'status_code' : status.HTTP_403_FORBIDDEN 
 			}
-		order = get_order_or_404(db, request.order_id)
+		
+		order, deal, user_name, user_email = db.query(Order, Deal, User.user_name, User.user_email) \
+											.join(Deal, Order.deal_id == Deal.deal_id) \
+											.join(User, Deal.user_id == User.user_id) \
+											.filter(Order.order_id == request.order_id) \
+											.first()
+		if not order:
+			raise HTTPException(
+				status_code = status.HTTP_404_NOT_FOUND,
+				detail = 'Cannot find the order !'
+			)
+		
+		# order = get_order_or_404(db, request.order_id)
 		order.status = request.status or order.status
 		order.reason = request.reason or order.reason
 		db.commit()
 		db.refresh(order)
+		await send_email(user_name, user_email, order.status, order.reason, 'About your order :')
 		log_activity(
 			db=db,
 			request= logRequest,
@@ -311,6 +324,8 @@ async def get_orders_by_user(db: Session, logRequest: Request, current_user: dic
 
         ords = []
         for deal in deals:
+            if deal.orders == []:
+                continue
             obj = {
                 'deal_id': deal.deal_id,
                 'orders': [

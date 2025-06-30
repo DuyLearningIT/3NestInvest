@@ -5,3 +5,4 @@ from .mail_sending import conf , generate_random_password
 from .TIN import get_info_from_tin
 from .helper import *
 from .tracking import log_activity
+from .mail_sending import send_email, send_email_to_managers

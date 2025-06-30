@@ -5,7 +5,7 @@ from fastapi import Depends, Request
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from fastapi import HTTPException, status
-from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, log_activity
+from app.utils import get_internal_server_error, get_deal_or_404, get_user_or_404, log_activity, send_email, send_email_to_managers
 from app.utils.permission_checking import check_permission
 
 async def get_deals(db: Session, logRequest: Request, current_user:dict):
@@ -98,6 +98,7 @@ async def create_deal(db: Session, request: DealCreate, logRequest: Request, cur
 		db.add(new_deal)
 		db.commit()
 		db.refresh(new_deal)
+		await send_email_to_managers(db, 'New deal registration has submitted !')
 		log_activity(
 			db=db,
 			request= logRequest,
@@ -204,11 +205,20 @@ async def change_status_of_deal(db: Session, request : DealApprove, logRequest: 
 				'mess' : "You don't have permission for accessing this function !",
 				'status_code' : status.HTTP_403_FORBIDDEN 
 			}
-		deal = get_deal_or_404(db, request.deal_id)
-		deal.status = request.status or deal.status
-		deal.reason = request.reason or deal.reason
+		deal_obj, user_email, user_name =  db.query(Deal, User.user_email, User.user_name) \
+				.join(User, Deal.user_id == User.user_id) \
+				.filter(Deal.deal_id == request.deal_id) \
+				.first()
+		if not deal_obj:
+			raise HTTPException(
+				status_code = 404,
+				detail = 'Deal not found !'
+			)
+		deal_obj.status = request.status or deal_obj.status
+		deal_obj.reason = request.reason or deal_obj.reason
+		await send_email(user_name, user_email, deal_obj.status, deal_obj.reason, 'About your deal: ')
 		db.commit()
-		db.refresh(deal)
+		db.refresh(deal_obj)
 		log_activity(
 			db=db,
 			request= logRequest,
@@ -219,7 +229,7 @@ async def change_status_of_deal(db: Session, request : DealApprove, logRequest: 
 		return {
 			'mess' : 'Change the status of deal successfully !',
 			'status_code' : status.HTTP_200_OK,
-			'data': deal
+			'data': deal_obj
 		}
 	except Exception as ex:
 		db.rollback()
