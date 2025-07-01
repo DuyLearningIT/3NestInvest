@@ -138,7 +138,7 @@ async def update_user(db: Session, user: UserUpdate, current_user: dict, request
 		check = get_user_or_404(db, user.user_id)
 		check.user_name = user.user_name or check.user_name
 		check.company_name = user.company_name or check.company_name
-		check.status = user.status or check.status
+		check.status = user.status
 		check.phone = user.phone or check.phone
 		check.updated_at = datetime.now()
 		check.updated_by = check.user_name
