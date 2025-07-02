@@ -56,6 +56,7 @@ async def get_deal(db: Session, deal_id : int, logRequest: Request, current_user
 					'description': deal.deal_description,
 					'domain_name' : deal.domain_name,
 					'created_at': deal.created_at.isoformat() if deal.created_at else None,
+					'created_by': deal.created_by,
 					'status': deal.status
 				},
 				'role' : user.role
