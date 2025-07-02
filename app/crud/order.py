@@ -40,7 +40,7 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 		for detail in order.details:
 			product = get_product_or_404(db, detail.product_id)
 
-			if current_user['role'] == 'channels':
+			if current_user['role'] == 'channel':
 				initial_price = product.channel_cost * detail.quantity
 			else:
 				if detail.price_for_customer < product.maximum_discount_price:

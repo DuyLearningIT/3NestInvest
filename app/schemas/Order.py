@@ -4,7 +4,7 @@ from typing import List
 class OrderDetailCreate(BaseModel):
 	product_id: int
 	quantity: int 
-	price_for_customer: float
+	price_for_customer: float | None = 0
 	service_contract_duration : int
 
 class OrderCreate(BaseModel):

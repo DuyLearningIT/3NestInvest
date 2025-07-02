@@ -168,7 +168,7 @@ async def update_product(db: Session, request : UpdateProduct, logRequest: Reque
 		pro.maximum_discount = request.maximum_discount or pro.maximum_discount
 		pro.maximum_discount_price = pro.price - ( pro.maximum_discount * pro.price ) / 100
 		pro.channel_cost  = request.channel_cost or pro.channel_cost
-		pro.status = request.status or pro.status
+		pro.status = request.status
 		pro.updated_at = datetime.utcnow()
 		pro.updated_by = current_user['user_name']
 
@@ -333,8 +333,8 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 		products_query = db.query(Product).options(
 			joinedload(Product.category).joinedload(Category.tb_type)
 		).filter(
-			Product.product_role == role_id,
-			Product.status != 'inactive'
+			Product.product_role == role_id
+			# Product.status != 'inactive'
 		)
 
 		pros = []

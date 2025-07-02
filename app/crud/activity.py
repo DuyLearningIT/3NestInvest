@@ -17,10 +17,10 @@ async def get_activity_logs_filtered(
     try:
         skip = (page - 1) * limit
 
-        query = db.query(ActivityLog)
+        query = db.query(ActivityLog, User.user_email).join(User, ActivityLog.user_id == User.user_id)
 
         if user_email:
-            query = query.join(User).filter(User.user_email == user_email.strip())
+            query = query.filter(User.user_email == user_email.strip())
 
         if entity:
             query = query.filter(ActivityLog.target_type == entity.strip())
@@ -30,7 +30,24 @@ async def get_activity_logs_filtered(
 
         total = query.count()
 
-        logs = query.order_by(ActivityLog.created_at.desc()).offset(skip).limit(limit).all()
+        results = (
+            query.order_by(ActivityLog.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        logs = []
+        for log, email in results:
+            logs.append({
+                'log_activity_id': log.activity_log_id,
+                'user_id': log.user_id,
+                'user_email': email,
+                'activity_description': log.activity_description,
+                'target_type': log.target_type,
+                'created_at': log.created_at.isoformat(),
+                'ip' : log.ip
+            })
 
         return {
             'mess': 'Filtered user activities',
