@@ -54,3 +54,8 @@ async def get_deals_by_user(db: db_depend, logRequest: Request, current_user = D
 async def get_deals_by_role(db: db_depend, role_id: int, logRequest: Request, current_user= Depends(get_current_user)):
 	response = await deal_crud.get_deals_by_role(db, role_id, logRequest, current_user)
 	return response
+
+@router.get('/count-submitted-deals')
+async def count_submitted_deals(db: db_depend, current_user = Depends(get_current_user)):
+	response = await deal_crud.count_submitted_deals(db)
+	return response

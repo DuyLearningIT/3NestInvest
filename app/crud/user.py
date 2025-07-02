@@ -101,6 +101,11 @@ async def login(db: Session, user: UserLogin, request: Request):
 				detail= 'Email not found !',
 				status_code = status.HTTP_404_NOT_FOUND
 			)
+		if check.status == 0:
+			raise HTTPException(
+				detail = 'This account cannot be used anymore !',
+				status_code = status.HTTP_400_BAD_REQUEST
+			)
 		if not verify_password(user.password, check.hashed_password):
 			raise HTTPException(
 				detail= 'Email or password was wrong !',
@@ -303,7 +308,7 @@ async def forgot_password(db: Session, email: EmailStr, phone: str):
         return get_internal_server_error(ex)
 
 # Admin required
-async def get_users_by_role(db: Session, role_id: int, request: Request):
+async def get_users_by_role(db: Session, role_id: int, request: Request, current_user: dict):
 	try:
 		permission = await check_permission(db, 'manage', 'user', current_user['role_id'])
 		if not permission:

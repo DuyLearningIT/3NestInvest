@@ -58,27 +58,29 @@ async def create_permission(db: Session, request: PermissionCreate):
 
 async def get_permissions(db: Session):
     try:
-        permissions = (
-            db.query(Permission)
-            .options(joinedload(Permission.permission_type))
-            .all()
-        )
-        
+        # permissions = (
+        #     db.query(Permission)
+        #     .options(joinedload(Permission.permission_type))
+        #     .all()
+        # )
+        permissions = db.query(Permission, PermissionType.permission_type_id, PermissionType.permission_type_name) \
+                        .join(PermissionType, PermissionType.permission_type_id == Permission.permission_type_id)  \
+                        .all()
+    
         permissions_data = [
-            {
-                'permission_id': perm.permission_id,
-                'permission_name': perm.permission_name,
-                'description': perm.permission_description,
-                'permission_type_id': perm.permission_type_id,
-                'permission_type_name': perm.permission_type.permission_type_name,
-                'created_at': perm.created_at,
-                'created_by': perm.created_by,
-                'updated_at': perm.updated_at,
-                'updated_by': perm.updated_by
-            }
-            for perm in permissions
-        ]
-        
+                {
+                    'permission_id': perm.permission_id,
+                    'permission_name': perm.permission_name,
+                    'description': perm.permission_description,
+                    'permission_type_id': permission_type_id,
+                    'permission_type_name': permission_type_name,
+                    'created_at': perm.created_at,
+                    'created_by': perm.created_by,
+                    'updated_at': perm.updated_at,
+                    'updated_by': perm.updated_by
+                }
+                for perm, permission_type_id, permission_type_name in permissions
+            ]
         return {
             'mess': 'Get all permissions successfully!',
             'status_code': status.HTTP_200_OK,

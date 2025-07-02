@@ -9,7 +9,7 @@ from app.schemas import TokenData
 
 SECRET_KEY = "093nestinvestca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88efrank"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 

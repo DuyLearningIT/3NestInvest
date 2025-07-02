@@ -295,7 +295,11 @@ async def delete_role(db: Session, role_id: int, logRequest: Request, current_us
         #         'mess': 'Cannot delete role that is assigned to users!',
         #         'status_code': status.HTTP_400_BAD_REQUEST
         #     }
-        
+        if role.role_name.strip().lower() == 'admin'.strip().lower():
+            return {
+                'mess' : 'You cannot delete this role !',
+                'status_code': status.HTTP_400_BAD_REQUEST
+            }
         db.delete(role)
         db.commit()
         log_activity(

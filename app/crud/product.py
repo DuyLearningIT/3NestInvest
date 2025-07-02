@@ -379,13 +379,12 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 # This function is used for user who log-in into our website and with their role
 async def get_products_by_category_and_role(db: Session, category_id: int, logRequest: Request, current_user: dict):
 	try:
-		permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
-		if not permission:
-			return {
-				'mess': "You don't have permission for accessing this function!",
-				'status_code': status.HTTP_403_FORBIDDEN
-			}
-
+		# permission = await check_permission(db, 'manage', 'product', current_user['role_id'])
+		# if not permission:
+		# 	return {
+		# 		'mess': "You don't have permission for accessing this function!",
+		# 		'status_code': status.HTTP_403_FORBIDDEN
+		# 	}
 		products = db.query(Product).options(
 			joinedload(Product.category)
 		).filter(

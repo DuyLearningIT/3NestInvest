@@ -9,7 +9,7 @@ services:
     depends_on:
       - mysql
     environment:
-      - DATABASE_URL=mysql+pymysql://root:root@mysql:3306/threenestinvest
+      - DATABASE_URL=mysql+pymysql://root:3nest2025@34.143.130.236/dbthreenest
     volumes:
       - .:/app
     restart: always
@@ -19,7 +19,7 @@ services:
     container_name: mysql_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 3nest2025
       MYSQL_DATABASE: threenestinvest
     ports:
       - "3306:3306"

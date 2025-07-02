@@ -65,5 +65,5 @@ async def reset_password(db: db_depend, email: EmailStr, phone: str):
 # Admin required
 @router.get('/get-users-by-role')
 async def get_users_by_role(db: db_depend, role: str, logRequest: Request, admin = Depends(admin_required)):
-	response = await user_crud.get_orders_by_role(db, role, current_user, logRequest)
+	response = await user_crud.get_users_by_role(db, role, logRequest, admin)
 	return response

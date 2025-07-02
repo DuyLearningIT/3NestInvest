@@ -99,7 +99,7 @@ async def create_deal(db: Session, request: DealCreate, logRequest: Request, cur
 		db.add(new_deal)
 		db.commit()
 		db.refresh(new_deal)
-		await send_email_to_managers(db, 'New deal registration has submitted !')
+		await send_email_to_managers(db, f'New deal registration has been submitted by {user.user_name}!')
 		log_activity(
 			db=db,
 			request= logRequest,
@@ -297,5 +297,15 @@ async def get_deals_by_role(db: Session, role_id: int, logRequest: Request, curr
 				for deal in deals
 			]
 		}																
+	except Exception as ex:
+		return get_internal_server_error(ex)
+
+async def count_submitted_deals(db: Session):
+	try:
+		amount = db.query(Deal).filter(Deal.status == 'submitted').count()
+		return {
+			'mess' : f'You have {amount} deals left to review !', 
+			'status_code': status.HTTP_200_OK
+		}
 	except Exception as ex:
 		return get_internal_server_error(ex)

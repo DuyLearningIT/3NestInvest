@@ -34,7 +34,7 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 		db.add(db_order)
 		db.commit()
 		db.refresh(db_order)
-		await send_email_to_managers(db, 'New order registration has submitted !')
+		await send_email_to_managers(db, f'New order registration has been submitted {user.user_name} !')
 		total_budget = 0
 		initial_price = 0
 		for detail in order.details:

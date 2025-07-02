@@ -180,12 +180,12 @@ async def delete_category(db: Session, category_id: int, logRequest: Request, cu
  
 async def get_categories_by_type(db: Session, type_id: int, logRequest: Request, current_user: dict):
 	try:
-		permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
-		if not permission:
-			return {
-				'mess' : "You don't have permission for accessing this function !",
-				'status_code' : status.HTTP_403_FORBIDDEN 
-			}
+		# permission = await check_permission(db, 'manage', 'type', current_user['role_id'])
+		# if not permission:
+		# 	return {
+		# 		'mess' : "You don't have permission for accessing this function !",
+		# 		'status_code' : status.HTTP_403_FORBIDDEN 
+		# 	}
 		log_activity(
 			db=db,
 			request= logRequest,
