@@ -7,12 +7,13 @@ class Product(Base):
 	__tablename__ = 'tb_product'
 
 	product_id = Column(Integer, primary_key=True, index=True)
-	product_name = Column(String(255), unique=True, nullable=False)
+	product_name = Column(String(255), nullable=False)
 	product_role = Column(Integer, ForeignKey('tb_role.role_id', ondelete='CASCADE'), nullable=False)
 	category_id = Column(Integer, ForeignKey('tb_category.category_id', ondelete='CASCADE'), nullable=False)
 	product_description = Column(String(255))
 	sku_partnumber = Column(String(100)) # It's a kind of product number
-	price = Column(Float, nullable=False)
+	original_cost = Column(Float, nullable = False) # This is an original cost for admin and manager to see it
+	price = Column(Float, nullable=False) # This is original cost of this role
 	channel_cost = Column(Float, default= 0) # This means how much money does the business have to pay for us
 	maximum_discount = Column(Float, default = 0)
 	maximum_discount_price = Column(Float, default = price - ( maximum_discount * price / 100 ))

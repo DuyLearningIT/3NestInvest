@@ -6,6 +6,7 @@ class CreateProduct(BaseModel):
 	category_id : int 
 	product_description : str | None = None 
 	sku_partnumber : str | None = None 
+	original_cost : float
 	price : float 
 	maximum_discount : float
 	channel_cost: float | None = 0
@@ -16,7 +17,8 @@ class UpdateProduct(BaseModel):
 	product_role : int | None = None
 	category_id : int | None = None
 	product_description : str | None = None 
-	sku_partnumber : str | None = None 
+	sku_partnumber : str | None = None
+	original_cost: float | None = None
 	price : float | None = None
 	maximum_discount : float | None = None
 	channel_cost: float | None = None

@@ -35,11 +35,14 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 		db.commit()
 		db.refresh(db_order)
 		await send_email_to_managers(db, f'New order registration has been submitted {user.user_name} !')
+		original_total_budget = 0
 		total_budget = 0
 		initial_price = 0
+		original_cost_per_detail = 0
 		for detail in order.details:
 			product = get_product_or_404(db, detail.product_id)
 
+			original_cost_per_detail = product.original_cost * detail.quantity
 			if current_user['role'] == 'channel':
 				initial_price = product.channel_cost * detail.quantity
 			else:
@@ -51,11 +54,14 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 				initial_price = detail.price_for_customer * detail.quantity
 
 			prices = []
+			original_detail = []
 			# Increase the price through each year of contract duration
 			for i in range(detail.service_contract_duration):
 				prices.append(initial_price * (1.05 ** i)) 
+				original_detail.append(original_cost_per_detail * (1.05 ** i))
 
 			final_price = sum(prices)
+			original_cost_detail = sum(original_detail)
 
 			db_detail = OrderDetails(
 				order_id=db_order.order_id,
@@ -63,13 +69,16 @@ async def create_order(db: Session, order : OrderCreate, logRequest: Request, cu
 				quantity=detail.quantity,
 				price_for_customer =detail.price_for_customer, # if the role is channels -> then don't care this field
 				service_contract_duration = detail.service_contract_duration,
-				final_price=final_price
+				final_price=final_price,
+				original_cost_detail = original_cost_detail
 			) 
 			# Calculate all the total budget
 			total_budget += final_price
+			original_total_budget += original_cost_detail
 			db.add(db_detail)
 
 		db_order.total_budget = total_budget
+		db_order.original_cost = original_total_budget
 		db.commit()
 		log_activity(
 			db=db,
@@ -107,6 +116,7 @@ async def get_order(db: Session, order_id : int, logRequest: Request, current_us
 				'deal_id' : order.deal_id,
 				'order_title' : order.order_title,
 				'order_description': order.order_description,
+				'original_cost': order.original_cost,
 				'total_budget' : order.total_budget,
 				'status' : order.status,
 				'created_at': order.created_at
@@ -420,6 +430,7 @@ async def get_orders_by_role(db: Session, role_id: int, logRequest: Request, cur
                         'customer_name': deal.customer_name,
                         'user_email': user.user_email,
                         'created_at': order.created_at,
+						'original_cost': order.original_cost,
                         'total_budget': order.total_budget,
                         'status': order.status
                     })

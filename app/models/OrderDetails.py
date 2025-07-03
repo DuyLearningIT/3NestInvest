@@ -9,6 +9,7 @@ class OrderDetails(Base):
     order_id = Column(Integer, ForeignKey("tb_order.order_id", ondelete='CASCADE'), nullable=False)
     product_id = Column(Integer, ForeignKey("tb_product.product_id", ondelete='CASCADE'), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
+    original_cost_detail = Column(Float, nullable = False)
     price_for_customer = Column(Float, default = 0)
     final_price = Column(Float, default = 0)
     service_contract_duration = Column(Integer, default=1)

@@ -12,6 +12,7 @@ class Order(Base):
 	order_title = Column(String(255))
 	order_description = Column(String(255))
 	reason = Column(String(255))
+	original_cost = Column(Float, nullable = False, default = 0)
 	total_budget = Column(Float, default = 0)
 	created_at = Column(DateTime, default = datetime.utcnow)
 	created_by = Column(String(50))

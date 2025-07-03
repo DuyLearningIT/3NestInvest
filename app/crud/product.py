@@ -28,6 +28,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 			sku_partnumber = request.sku_partnumber,
 			price = request.price,
 			maximum_discount = request.maximum_discount,
+			original_cost = request.original_cost,
 			category_id = request.category_id,
 			product_role = request.product_role,
 			channel_cost = request.channel_cost,
@@ -51,6 +52,7 @@ async def create_product(db: Session, request : CreateProduct, logRequest: Reque
 				'product_name' : new_pro.product_name,
 				'sku_partnumber' : new_pro.sku_partnumber,
 				'description' : new_pro.product_description,
+				'original_cost' : new_pro.original_cost,
 				'price' : new_pro.price,
 				'product_role' : new_pro.product_role,
 				'category_name': db.query(Category).options(load_only(Category.category_name)).filter(Category.category_id == new_pro.category_id).first(),
@@ -84,6 +86,7 @@ async def get_products(db: Session, logRequest: Request, current_user: dict):
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
 				'description': pro.product_description,
+				'orgininal_cost' : pro.original_cost,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'type_name': type_.type_name if type_ else None,
@@ -131,6 +134,7 @@ async def get_product(db: Session, product_id : int, logRequest: Request, curren
 				'sku_partnumber' : pro.sku_partnumber,
 				'product_role' : pro.product_role,
 				'description' : pro.product_description,
+				'original_cost' : pro.original_cost,
 				'price' : pro.price,
 				'category_name': cate.category_name,
 				'type_name' : type_.type_name,
@@ -164,6 +168,7 @@ async def update_product(db: Session, request : UpdateProduct, logRequest: Reque
 		pro.category_id = request.category_id or pro.category_id
 		pro.product_description = request.product_description or pro.product_description
 		pro.sku_partnumber = request.sku_partnumber or pro.sku_partnumber
+		pro.original_cost = request.original_cost or pro.original_cost
 		pro.price = request.price or pro.price
 		pro.maximum_discount = request.maximum_discount or pro.maximum_discount
 		pro.maximum_discount_price = pro.price - ( pro.maximum_discount * pro.price ) / 100
@@ -204,7 +209,8 @@ async def get_products_by_category(db: Session, category_id: int, logRequest: Re
 					Product.product_name, 
 					Product.product_description,
 					Product.category_id, 
-					Product.price, 
+					Product.price,
+					Product.original_cost,
 					Product.sku_partnumber, 
 					Product.maximum_discount,
 					Product.maximum_discount_price,
@@ -292,6 +298,7 @@ async def get_products_by_role(db: Session, logRequest: Request, current_user: d
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
 				'description': pro.product_description,
+				'original_cost' : pro.original_cost,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -349,6 +356,7 @@ async def get_products_by_role_and_type(db: Session, role_id: int, type_id: int,
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
 				'description': pro.product_description,
+				'original_cost': pro.original_cost,
 				'price': pro.price,
 				'category_name': cate.category_name if cate else None,
 				'maximum_discount': pro.maximum_discount,
@@ -403,6 +411,7 @@ async def get_products_by_category_and_role(db: Session, category_id: int, logRe
 				'sku_partnumber': pro.sku_partnumber,
 				'product_role': pro.product_role,
 				'description': pro.product_description,
+				'original_cost' : pro.original_cost,
 				'price': pro.price,
 				'category_name': cate.category_name,
 				'maximum_discount': pro.maximum_discount,
